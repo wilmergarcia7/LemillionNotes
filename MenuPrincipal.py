@@ -99,7 +99,7 @@ class AgendaMenu(QWidget):
         self.setGeometry(450, 450, 457,609)
         
         #Colocar Imagen de fondo
-        oImage = QImage("Resource/Lemilion.jpg")
+        oImage = QImage("Resource/MenuAgenda.jpg")
         sImage = oImage.scaled(QSize(457,609))
         palette = QPalette()
         palette.setBrush(QPalette.Window, QBrush(sImage))
