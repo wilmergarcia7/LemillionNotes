@@ -36,10 +36,11 @@ class Main(QWidget):
         self.title = QLabel("Agregar Asignatura")
         self.asignature_list = QListWidget()     
         self.btn_new = QPushButton("Agregar")
-      #  self.btn_new.clicked.connect(self.add_employee)
+      #  self.btn_new.clicked.connect(self.add_subject)
         self.btn_update = QPushButton("Modificar")
         self.btn_delete = QPushButton("Eliminar")
-        # Bottom Layout Widgets
+        
+        # Center Layout Widgets
         self.label_name_subject = QLabel("Nombre Asignatura: ")
         self.input_name_subject = QLineEdit()
         self.input_name_subject.setPlaceholderText("Cálculo")
@@ -58,37 +59,56 @@ class Main(QWidget):
         self.label_classroom = QLabel("Aula: ")
         self.input_classroom = QLineEdit()
         self.input_classroom.setPlaceholderText("125") 
-        #self.btn_Agenda.move(171,80)
+        
     def layouts(self):
         """ Layouts que compone el menu principal"""
-        #Layouts
+        # Layouts
+        # Layout principal el que contiene a left_main_layout
+        # y right_main_layout
         self.main_layout = QHBoxLayout()
+        
+        # Layout principal del lado izquierdo que contiene a
         self.left_main_layout = QVBoxLayout()
+        
+        # Layouts contenidos en en left_main_layout
         self.left_top_layout = QHBoxLayout()
         self.left_center_layout = QFormLayout()
         self.left_bottom_layout = QHBoxLayout()
+        
+        # Layout pricipal del lado derecho
         self.right_main_layout = QVBoxLayout()
         self.right_top_layout = QHBoxLayout()
         
 
         # Agregar los layouts hijos al layout padre
-        self.right_main_layout.addLayout(self.right_top_layout)
+        # Layout principal
+        self.main_layout.addLayout(self.left_main_layout, 45)
+        self.main_layout.addLayout(self.right_main_layout, 55)
+        
+        # Layout Lado izquierdo
         self.left_main_layout.addLayout(self.left_top_layout, 30)
         self.left_main_layout.addLayout(self.left_center_layout, 40)
         self.left_main_layout.addLayout(self.left_bottom_layout, 30)
-        self.main_layout.addLayout(self.left_main_layout, 45)
-        self.main_layout.addLayout(self.right_main_layout, 55)
+        
+        # Layout lado derecho
+        self.right_main_layout.addLayout(self.right_top_layout)
 
         # Agregar widgets a los layouts
+        # Lista de asignaturas lado derecho
         self.right_top_layout.addWidget(self.asignature_list)
+        
+        # Titulo lado izquierdo superior
         self.left_top_layout.addWidget(self.title, alignment=Qt.AlignHCenter)
-        #self.left_center_layout.setAlignment(Qt.AlignVCenter)
+        
+        # funciones de escribir datos lado izquierdo central
         self.left_center_layout.addRow(self.label_name_subject , self.input_name_subject)
         self.left_center_layout.addRow(self.label_time_in , self.input_time_in )
         self.left_center_layout.addRow(self.label_time_out , self.input_time_out )
         self.left_center_layout.addRow(self.label_day , self.input_day )
         self.left_center_layout.addRow(self.label_professor , self.input_professor )
         self.left_center_layout.addRow(self.label_classroom , self.input_classroom )
+        
+        # Botones lado izquierdo inferior
         self.left_bottom_layout.addWidget(self.btn_new)
         self.left_bottom_layout.addWidget(self.btn_update)
         self.left_bottom_layout.addWidget(self.btn_delete)
