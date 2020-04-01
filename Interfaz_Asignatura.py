@@ -33,7 +33,14 @@ class Main(QWidget):
         """
         Menú que añade una asignatura y ve sus detalles
         """
-        self.title = QLabel("Agregar Asignatura")
+        self.title = QLabel("A s i g n a t u r a", alignment=Qt.AlignCenter)
+        self.title.setFixedHeight(70)
+        self.title.setFixedWidth(457)
+        self.title.setStyleSheet("""color: white;
+                                    font-size: 30px;
+                                    background-image: url(Resource/Banner.jpg);
+                                    """)
+        
         self.asignature_list = QListWidget()     
         self.btn_new = QPushButton("Agregar")
       #  self.btn_new.clicked.connect(self.add_subject)
@@ -65,7 +72,7 @@ class Main(QWidget):
         # Layouts
         # Layout principal el que contiene a left_main_layout
         # y right_main_layout
-        self.main_layout = QHBoxLayout()
+        self.main_layout = QVBoxLayout()
         
         # Layout principal del lado izquierdo que contiene a
         self.left_main_layout = QVBoxLayout()
@@ -77,7 +84,7 @@ class Main(QWidget):
         
         # Layout pricipal del lado derecho
         self.right_main_layout = QVBoxLayout()
-        self.right_top_layout = QHBoxLayout()
+        self.right_top_layout = QVBoxLayout()
         
 
         # Agregar los layouts hijos al layout padre
@@ -98,7 +105,7 @@ class Main(QWidget):
         self.right_top_layout.addWidget(self.asignature_list)
         
         # Titulo lado izquierdo superior
-        self.left_top_layout.addWidget(self.title, alignment=Qt.AlignHCenter)
+        self.left_top_layout.addWidget(self.title)
         
         # funciones de escribir datos lado izquierdo central
         self.left_center_layout.addRow(self.label_name_subject , self.input_name_subject)
