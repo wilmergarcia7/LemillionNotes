@@ -21,7 +21,7 @@ class Main(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Asignatura")
-        self.setGeometry(450, 450, 457,609)
+        self.setGeometry(450, 450, 457, 609)
         self.UI()
         self.show()
 
@@ -34,9 +34,12 @@ class Main(QWidget):
         Menú que añade una asignatura y ve sus detalles
         """
         self.title = QLabel("Agregar Asignatura")
+        self.image = QLabel()        
+        self.image.setPixmap(QPixmap("Resource/Asignatura_Banner.jpg"))
+        
         self.asignature_list = QListWidget()     
         self.btn_new = QPushButton("Agregar")
-      #  self.btn_new.clicked.connect(self.add_subject)
+      # self.btn_new.clicked.connect(self.add_subject)
         self.btn_update = QPushButton("Modificar")
         self.btn_delete = QPushButton("Eliminar")
         
@@ -63,58 +66,66 @@ class Main(QWidget):
     def layouts(self):
         """ Layouts que compone el menu principal"""
         # Layouts
-        # Layout principal el que contiene a left_main_layout
-        # y right_main_layout
-        self.main_layout = QHBoxLayout()
         
+        # Layout de fondo que contiene a titulo y principal
+        self.All_layout = QVBoxLayout()
+        
+        # Layout de titulo
+        self.main_title = QHBoxLayout()
+        
+        # Layout principal el que contiene a central_main_layout
+        # y bottom_main_layout   
+        self.main_layout = QVBoxLayout()
+    
         # Layout principal del lado izquierdo que contiene a
-        self.left_main_layout = QVBoxLayout()
+        self.central_main_layout = QVBoxLayout()
         
-        # Layouts contenidos en en left_main_layout
-        self.left_top_layout = QHBoxLayout()
-        self.left_center_layout = QFormLayout()
-        self.left_bottom_layout = QHBoxLayout()
+        # Layouts contenidos en en central_main_layout
+        self.central_center_layout = QFormLayout()
+        self.central_bottom_layout = QHBoxLayout()
         
         # Layout pricipal del lado derecho
-        self.right_main_layout = QVBoxLayout()
-        self.right_top_layout = QHBoxLayout()
+        self.bottom_main_layout = QVBoxLayout()
+        self.bottom_central_layout = QHBoxLayout()
         
-
         # Agregar los layouts hijos al layout padre
+        # Layout fondo
+        self.All_layout.addLayout(self.main_title, 10)
+        self.All_layout.addLayout(self.main_layout, 90)
+        
+         # Layout titulo
+        self.main_title.addWidget(self.image)
+        # alignment=Qt.AlignHCenter
         # Layout principal
-        self.main_layout.addLayout(self.left_main_layout, 45)
-        self.main_layout.addLayout(self.right_main_layout, 55)
+        self.main_layout.addLayout(self.central_main_layout, 40)
+        self.main_layout.addLayout(self.bottom_main_layout, 60)
+              
+        # Layout central
+        self.central_main_layout.addLayout(self.central_center_layout, 90)
+        self.central_main_layout.addLayout(self.central_bottom_layout, 10)
+                       
+        # funciones de escribir datos layout central
+        self.central_center_layout.addRow(self.label_name_subject , self.input_name_subject)
+        self.central_center_layout.addRow(self.label_time_in , self.input_time_in )
+        self.central_center_layout.addRow(self.label_time_out , self.input_time_out )
+        self.central_center_layout.addRow(self.label_day , self.input_day )
+        self.central_center_layout.addRow(self.label_professor , self.input_professor )
+        self.central_center_layout.addRow(self.label_classroom , self.input_classroom )
         
-        # Layout Lado izquierdo
-        self.left_main_layout.addLayout(self.left_top_layout, 30)
-        self.left_main_layout.addLayout(self.left_center_layout, 40)
-        self.left_main_layout.addLayout(self.left_bottom_layout, 30)
+        # Botones layout central inferior
+        self.central_bottom_layout.addWidget(self.btn_new)
+        self.central_bottom_layout.addWidget(self.btn_update)
+        self.central_bottom_layout.addWidget(self.btn_delete)
         
-        # Layout lado derecho
-        self.right_main_layout.addLayout(self.right_top_layout)
-
-        # Agregar widgets a los layouts
-        # Lista de asignaturas lado derecho
-        self.right_top_layout.addWidget(self.asignature_list)
+         # Layout inferior
+        self.bottom_main_layout.addLayout(self.bottom_central_layout)
         
-        # Titulo lado izquierdo superior
-        self.left_top_layout.addWidget(self.title, alignment=Qt.AlignHCenter)
-        
-        # funciones de escribir datos lado izquierdo central
-        self.left_center_layout.addRow(self.label_name_subject , self.input_name_subject)
-        self.left_center_layout.addRow(self.label_time_in , self.input_time_in )
-        self.left_center_layout.addRow(self.label_time_out , self.input_time_out )
-        self.left_center_layout.addRow(self.label_day , self.input_day )
-        self.left_center_layout.addRow(self.label_professor , self.input_professor )
-        self.left_center_layout.addRow(self.label_classroom , self.input_classroom )
-        
-        # Botones lado izquierdo inferior
-        self.left_bottom_layout.addWidget(self.btn_new)
-        self.left_bottom_layout.addWidget(self.btn_update)
-        self.left_bottom_layout.addWidget(self.btn_delete)
+         # Agregar widgets a los layouts
+        # Lista de asignaturas lado inferior
+        self.bottom_central_layout.addWidget(self.asignature_list)
         
         #Colocar el layout principal en la ventana principal
-        self.setLayout(self.main_layout)
+        self.setLayout(self.All_layout)
 
 def main():
     app = QApplication(sys.argv)

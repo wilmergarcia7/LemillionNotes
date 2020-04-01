@@ -42,14 +42,8 @@ class Interfaz_Tarea(QWidget):
                                     """)
 
 
-        self.label_agregar_tarea = QLabel("A g r e g a r  T a r e a")
-        self.label_agregar_tarea.setStyleSheet("""  color: #856065; 
-                                                    font-size: 20px""")
-                                            
-        self.label_ver_tareas = QLabel("T a r e a s")
-        self.label_ver_tareas.setStyleSheet("""  color: #856065; 
-                                                font-size: 20px;""")
-        
+        self.label_agregar_tarea = QLabel("  ")
+        self.label_ver_tareas = QLabel("  ")
         self.tittle.adjustSize()
         self.homework_List = QListWidget()
         self.btn_agregar = QPushButton("Agregar")
