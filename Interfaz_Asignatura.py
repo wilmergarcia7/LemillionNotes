@@ -25,7 +25,7 @@ class Main(QWidget):
         super().__init__()
         self.subject_db = SubjectDB("subject.db")
         self.setWindowTitle("Asignatura")
-        self.setGeometry(450, 450, 457,609)
+        self.setGeometry(450, 450, 457, 609)
         self.UI()
         self.show()
 
@@ -79,28 +79,31 @@ class Main(QWidget):
         # y right_main_layout
         self.main_layout = QVBoxLayout()
         
-        # Layout principal del lado izquierdo que contiene a
-        self.left_main_layout = QVBoxLayout()
+        # Layout de fondo que contiene a titulo y principal
+        self.All_layout = QVBoxLayout()
         
-        # Layouts contenidos en en left_main_layout
-        self.left_top_layout = QHBoxLayout()
-        self.left_center_layout = QFormLayout()
-        self.left_bottom_layout = QHBoxLayout()
+        # Layout de titulo
+        self.main_title = QHBoxLayout()
+        
+        # Layout principal el que contiene a central_main_layout
+        # y bottom_main_layout   
+        self.main_layout = QVBoxLayout()
+    
+        # Layout principal del lado izquierdo que contiene a
+        self.central_main_layout = QVBoxLayout()
+        
+        # Layouts contenidos en en central_main_layout
+        self.central_center_layout = QFormLayout()
+        self.central_bottom_layout = QHBoxLayout()
         
         # Layout pricipal del lado derecho
         self.right_main_layout = QVBoxLayout()
         self.right_top_layout = QVBoxLayout()
         
-
         # Agregar los layouts hijos al layout padre
-        # Layout principal
-        self.main_layout.addLayout(self.left_main_layout, 45)
-        self.main_layout.addLayout(self.right_main_layout, 55)
-        
-        # Layout Lado izquierdo
-        self.left_main_layout.addLayout(self.left_top_layout, 30)
-        self.left_main_layout.addLayout(self.left_center_layout, 40)
-        self.left_main_layout.addLayout(self.left_bottom_layout, 30)
+        # Layout fondo
+        self.All_layout.addLayout(self.main_title, 10)
+        self.All_layout.addLayout(self.main_layout, 90)
         
         # Layout lado derecho
         self.right_main_layout.addLayout(self.right_top_layout)
@@ -120,13 +123,12 @@ class Main(QWidget):
         self.left_center_layout.addRow(self.label_professor , self.input_professor )
         self.left_center_layout.addRow(self.label_classroom , self.input_classroom )
         
-        # Botones lado izquierdo inferior
-        self.left_bottom_layout.addWidget(self.btn_new)
-        self.left_bottom_layout.addWidget(self.btn_update)
-        self.left_bottom_layout.addWidget(self.btn_delete)
+         # Agregar widgets a los layouts
+        # Lista de asignaturas lado inferior
+        self.bottom_central_layout.addWidget(self.asignature_list)
         
         #Colocar el layout principal en la ventana principal
-        self.setLayout(self.main_layout)
+        self.setLayout(self.All_layout)
 
     def add_subject(self):
         """ Inicia el formulario de ingreso de datos del empleado """
