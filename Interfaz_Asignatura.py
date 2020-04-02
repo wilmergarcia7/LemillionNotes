@@ -10,6 +10,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QFont, QIcon, QRegion, QFontMetrics, QPixmap
 import sys
 import os
+import time
+import sqlite3
+from sqlite3 import Error
 #from PyQt5.QtWidgets import QVBoxLayout
 
 #from ..utils import gui_test, get_icon_pixmap
@@ -50,19 +53,19 @@ class Main(QWidget):
         # Center Layout Widgets
         self.label_name_subject = QLabel("Nombre Asignatura: ")
         self.input_name_subject = QLineEdit()
-        self.input_name_subject.setPlaceholderText("Cálculo")
-        self.label_time_in= QLabel("Hora de entrada: ")
-        self.input_time_in = QLineEdit()
-        self.input_time_in.setPlaceholderText("12:00 p.m.")
-        self.label_time_out= QLabel("Hora de salida: ")
-        self.input_time_out = QLineEdit()
-        self.input_time_out.setPlaceholderText("1:00 p.m.")
+        self.input_name_subject.setPlaceholderText("Asesinar II")
+        self.label_check_in= QLabel("Hora de entrada: ")
+        self.input_check_in = QTimeEdit()        
+        #self.input_time_in.setPlaceholderText("12:00 p.m.")
+        self.label_check_out= QLabel("Hora de salida: ")
+        self.input_check_out = QTimeEdit()
+        #self.input_time_out.setPlaceholderText("1:00 p.m.")
         self.label_day = QLabel("Día: ")
         self.input_day = QLineEdit()
-        self.input_day.setPlaceholderText("Lunes")
+        self.input_day.setPlaceholderText("Lunes, martes, miércoles, jueves, viernes, sábado, domingo")
         self.label_professor = QLabel("Catedrático: ")
         self.input_professor = QLineEdit()
-        self.input_professor.setPlaceholderText("Wade Wilson")
+        self.input_professor.setPlaceholderText("Wade Winston Wilson")
         self.label_classroom = QLabel("Aula: ")
         self.input_classroom = QLineEdit()
         self.input_classroom.setPlaceholderText("125") 
@@ -109,8 +112,8 @@ class Main(QWidget):
         
         # funciones de escribir datos lado izquierdo central
         self.left_center_layout.addRow(self.label_name_subject , self.input_name_subject)
-        self.left_center_layout.addRow(self.label_time_in , self.input_time_in )
-        self.left_center_layout.addRow(self.label_time_out , self.input_time_out )
+        self.left_center_layout.addRow(self.label_check_in , self.input_check_in )
+        self.left_center_layout.addRow(self.label_check_out , self.input_check_out )
         self.left_center_layout.addRow(self.label_day , self.input_day )
         self.left_center_layout.addRow(self.label_professor , self.input_professor )
         self.left_center_layout.addRow(self.label_classroom , self.input_classroom )
@@ -122,6 +125,97 @@ class Main(QWidget):
         
         #Colocar el layout principal en la ventana principal
         self.setLayout(self.main_layout)
+
+    def insert(self):
+        """ Insertar los valores del formulario a la tabla de asignatura"""
+        # Verificar si los valores requeridos fueron agregados
+        if (self.input_id.text() or self.input_name.text() or
+                self.input_phone.text() or self.input_email.text() != ""):
+            employee = (self.input_id.text(), self.input_name.text(),
+                        self.input_phone.text(), self.input_email.text(),
+                        self.textedit_address.toPlainText(), "")
+
+            try:
+                self.employee_db.add_employee(employee)
+                QMessageBox.information(
+                    self, "Información", "Asignatura agregado correctamente")
+                self.close()
+                self.main = Main()
+            except Error as e:
+                QMessageBox.information(
+                    self, "Error", "Error al momento de agregar la asignatura")
+        else:
+            QMessageBox.information(
+                self, "Advertencia", "Debes ingresar toda la información")
+class Subject:
+    " Base de datos para las asignaturas "
+
+    def __init__(self, db_filename):
+        """ Inicializador de la clase """
+        self.connection = self.create_connection(db_filename)
+        self.subject_query = """   
+                                    CREATE TABLE IF NOT EXISTS asignatura
+	                                (
+	                                idSubject INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	                                nameSubject TEXT NOT NULL,
+	                                chechkIn TIMESTAMP,
+	                                chechkOut TIMESTAMP,
+	                                day TEXT,
+	                                professor TEXT,
+	                                classroom TEXT,
+	                                CONSTRAINT UQ_nameSubject UNIQUE (nameSubject)
+	                                )
+                              """
+        self.create_table(self.connection, self.subject_query)
+        
+    def create_connection(self, db_filename):
+        """ Crear una conexión a la base de datos SQLite """
+        conn = None
+
+        # Tratar de conectarse con SQLite y crear la base de datos
+        try:
+            conn = sqlite3.connect(db_filename)
+            print("Conexión realizada. Versión {}".format(sqlite3.version))
+        except Error as e:
+            print(e)
+        finally:
+            return conn
+    
+    def create_table(self, conn, query):
+        """
+        Crea una tabla basado en los valores de query.
+        :param conn: Conexión con la base de datos.
+        :param query: La instrucción CREATE TABLE.
+        :return:
+        """
+        try:
+            cursor = conn.cursor()
+            cursor.execute(query)
+        except Error as e:
+            print(e)
+
+    def add_subject(self, subject):
+        """
+        Realiza una inserción a la tabla de empleados.
+        :param subject: Una estructura que contiene
+                         los datos del empleado.
+        :return:
+        """
+        sqlInsert = """
+                    INSERT INTO subject(
+                        nameSubject, chechkIn, chechkOut,
+	                    day, professor, classroom,)
+                     VALUES(?, ?, ?, ?, ?, ?)
+                    """
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlInsert, subject)
+            # Indicarle al motor de base de datos
+            # que los cambios sean persistentes
+            self.connection.commit()
+        except Error as e:
+            print(e)
 
 def main():
     app = QApplication(sys.argv)
