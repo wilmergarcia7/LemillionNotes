@@ -23,6 +23,7 @@ class Main(QWidget):
     """
     def __init__(self):
         super().__init__()
+        self.subject_db = SubjectDB("subject.db")
         self.setWindowTitle("Asignatura")
         self.setGeometry(450, 450, 457,609)
         self.UI()
@@ -31,6 +32,7 @@ class Main(QWidget):
     def UI(self):
         self.main_design()
         self.layouts()
+        self.set_subject_list()
 
     def main_design(self):
         """
@@ -44,9 +46,9 @@ class Main(QWidget):
                                     background-image: url(Resource/Banner.jpg);
                                     """)
         
-        self.asignature_list = QListWidget()     
+        self.subject_list = QListWidget()     
         self.btn_new = QPushButton("Agregar")
-      #  self.btn_new.clicked.connect(self.add_subject)
+        self.btn_new.clicked.connect(self.add_subject)
         self.btn_update = QPushButton("Modificar")
         self.btn_delete = QPushButton("Eliminar")
         
@@ -55,7 +57,7 @@ class Main(QWidget):
         self.input_name_subject = QLineEdit()
         self.input_name_subject.setPlaceholderText("Asesinar II")
         self.label_check_in= QLabel("Hora de entrada: ")
-        self.input_check_in = QTimeEdit()        
+        self.input_check_in = QTimeEdit()     
         #self.input_time_in.setPlaceholderText("12:00 p.m.")
         self.label_check_out= QLabel("Hora de salida: ")
         self.input_check_out = QTimeEdit()
@@ -105,7 +107,7 @@ class Main(QWidget):
 
         # Agregar widgets a los layouts
         # Lista de asignaturas lado derecho
-        self.right_top_layout.addWidget(self.asignature_list)
+        self.right_top_layout.addWidget(self.subject_list)
         
         # Titulo lado izquierdo superior
         self.left_top_layout.addWidget(self.title)
@@ -126,19 +128,19 @@ class Main(QWidget):
         #Colocar el layout principal en la ventana principal
         self.setLayout(self.main_layout)
 
-    def insert(self):
-        """ Insertar los valores del formulario a la tabla de asignatura"""
-        # Verificar si los valores requeridos fueron agregados
-        if (self.input_id.text() or self.input_name.text() or
-                self.input_phone.text() or self.input_email.text() != ""):
-            employee = (self.input_id.text(), self.input_name.text(),
-                        self.input_phone.text(), self.input_email.text(),
-                        self.textedit_address.toPlainText(), "")
-
+    def add_subject(self):
+        """ Inicia el formulario de ingreso de datos del empleado """
+        #self.new_subject = AddSubject(self.subject_db)
+        #self.close()
+        if (self.input_name_subject.text() or self.input_day.text() or
+            self.input_professor.text() or self.input_classroom.text() != ""):
+            subject = (self.input_name_subject.text(), self.input_check_in.text(),
+                       self.input_check_out.text(), self.input_day.text(),
+                       self.input_professor.text(), self.input_classroom.text())
             try:
-                self.employee_db.add_employee(employee)
+                self.subject_db.add_subject(subject)
                 QMessageBox.information(
-                    self, "Información", "Asignatura agregado correctamente")
+                    self, "Información", "Asignatura agregada correctamente")
                 self.close()
                 self.main = Main()
             except Error as e:
@@ -147,14 +149,48 @@ class Main(QWidget):
         else:
             QMessageBox.information(
                 self, "Advertencia", "Debes ingresar toda la información")
-class Subject:
+
+    def set_subject_list(self):
+        """ Obtiene las tuplas de empleados y las muestra en la lista """
+        subjects = self.subject_db.get_all_subjects()
+
+        if subjects:
+            for subject in subjects:
+                self.subject_list.addItem(
+                    "{0} --- {1} ".format(subject[1], subject[6]))
+                
+    def show_subject_list(self):
+        """ obtiene las tuplas de empleados y las muestra en la lista """
+        # Obtener el valor de la identidad del empleado seleccionado
+        subject = self.subject_list.currentItem().text()
+        id = subject.split(" --- ")[0]
+        
+        # crear y agregar los widget necesarios para mostrar la información
+        if id:
+            name_subject = QLabel(subject[1])
+            checkIn = QLabel(subject[2])
+            checkOut = QLabel(subject[3])
+            days = QLabel(subject[4])
+            professor = QLabel(subject[5])
+            classroom = QLabel(subject[6])           
+                
+            #self.left_layout.addRow("Asignatura", name_subject)
+            #self.left_layout.addRow("Hora Entrada", checkIn)
+            #self.left_layout.addRow("Hora Salida", checkOut)
+            #self.left_layout.addRow("Días", days)
+            #self.left_layout.addRow("Hora Entrada", checkIn)
+            #self.left_layout.addRow("Catedratico", professor)
+            #self.left_layout.addRow("Aula", classroom)
+            
+            
+class SubjectDB:
     " Base de datos para las asignaturas "
 
     def __init__(self, db_filename):
         """ Inicializador de la clase """
         self.connection = self.create_connection(db_filename)
         self.subject_query = """   
-                                    CREATE TABLE IF NOT EXISTS asignatura
+                                    CREATE TABLE IF NOT EXISTS subject
 	                                (
 	                                idSubject INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	                                nameSubject TEXT NOT NULL,
@@ -204,7 +240,7 @@ class Subject:
         sqlInsert = """
                     INSERT INTO subject(
                         nameSubject, chechkIn, chechkOut,
-	                    day, professor, classroom,)
+	                    day, professor, classroom)
                      VALUES(?, ?, ?, ?, ?, ?)
                     """
 
@@ -216,6 +252,22 @@ class Subject:
             self.connection.commit()
         except Error as e:
             print(e)
+            
+    def get_all_subjects(self):
+        """ Obtiene todas las tuplas de la tabla subject """
+        sqlQuery = " SELECT * FROM subject ORDER BY ROWID ASC "
+
+        try:
+            cursor = self.connection.cursor()
+            subjects = cursor.execute(sqlQuery).fetchall()
+
+            return subjects
+        except Error as e:
+            print(e)
+
+        return None
+        
+
 
 def main():
     app = QApplication(sys.argv)
