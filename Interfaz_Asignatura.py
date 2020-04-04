@@ -58,10 +58,8 @@ class Main(QWidget):
         self.input_name_subject.setPlaceholderText("Asesinar II")
         self.label_check_in= QLabel("Hora de entrada: ")
         self.input_check_in = QTimeEdit()     
-        #self.input_time_in.setPlaceholderText("12:00 p.m.")
         self.label_check_out= QLabel("Hora de salida: ")
         self.input_check_out = QTimeEdit()
-        #self.input_time_out.setPlaceholderText("1:00 p.m.")
         self.label_day = QLabel("Día: ")
         self.input_day = QLineEdit()
         self.input_day.setPlaceholderText("Lunes, martes, miércoles, jueves, viernes, sábado, domingo")
@@ -79,56 +77,49 @@ class Main(QWidget):
         # y right_main_layout
         self.main_layout = QVBoxLayout()
         
-        # Layout de fondo que contiene a titulo y principal
-        self.All_layout = QVBoxLayout()
+         # Layout de titulo
+        self.title_layout = QVBoxLayout()
         
-        # Layout de titulo
-        self.main_title = QHBoxLayout()
-        
-        # Layout principal el que contiene a central_main_layout
-        # y bottom_main_layout   
-        self.main_layout = QVBoxLayout()
+        # Layout contenerdor de la información sobre la asignatura
+        self.content_layout = QFormLayout()
+              
+        # Layout que contiene botones 
+        self.button_layout = QHBoxLayout()
     
-        # Layout principal del lado izquierdo que contiene a
-        self.central_main_layout = QVBoxLayout()
-        
-        # Layouts contenidos en en central_main_layout
-        self.central_center_layout = QFormLayout()
-        self.central_bottom_layout = QHBoxLayout()
-        
-        # Layout pricipal del lado derecho
-        self.right_main_layout = QVBoxLayout()
-        self.right_top_layout = QVBoxLayout()
-        
+        # Layout que contiene la lista de asignaturas
+        self.list_layout = QVBoxLayout()
+
         # Agregar los layouts hijos al layout padre
         # Layout fondo
-        self.All_layout.addLayout(self.main_title, 10)
-        self.All_layout.addLayout(self.main_layout, 90)
+        self.main_layout.addLayout(self.title_layout, 10)
+        self.main_layout.addLayout(self.content_layout, 40)
+        self.main_layout.addLayout(self.button_layout, 5)
+        self.main_layout.addLayout(self.list_layout, 40)
         
-        # Layout lado derecho
-        self.right_main_layout.addLayout(self.right_top_layout)
-
         # Agregar widgets a los layouts
-        # Lista de asignaturas lado derecho
-        self.right_top_layout.addWidget(self.subject_list)
         
-        # Titulo lado izquierdo superior
-        self.left_top_layout.addWidget(self.title)
+        # Titulo 
+        self.title_layout.addWidget(self.title)
         
         # funciones de escribir datos lado izquierdo central
-        self.left_center_layout.addRow(self.label_name_subject , self.input_name_subject)
-        self.left_center_layout.addRow(self.label_check_in , self.input_check_in )
-        self.left_center_layout.addRow(self.label_check_out , self.input_check_out )
-        self.left_center_layout.addRow(self.label_day , self.input_day )
-        self.left_center_layout.addRow(self.label_professor , self.input_professor )
-        self.left_center_layout.addRow(self.label_classroom , self.input_classroom )
+        self.content_layout.addRow(self.label_name_subject , self.input_name_subject)
+        self.content_layout.addRow(self.label_check_in , self.input_check_in )
+        self.content_layout.addRow(self.label_check_out , self.input_check_out )
+        self.content_layout.addRow(self.label_day , self.input_day )
+        self.content_layout.addRow(self.label_professor , self.input_professor )
+        self.content_layout.addRow(self.label_classroom , self.input_classroom )
         
-         # Agregar widgets a los layouts
-        # Lista de asignaturas lado inferior
-        self.bottom_central_layout.addWidget(self.asignature_list)
+        # Botones
+        self.button_layout.addWidget(self.btn_new)
+        self.button_layout.addWidget(self.btn_update)
+        self.button_layout.addWidget(self.btn_delete)
+        
+        # Lista de asignaturas 
+        self.list_layout.addWidget(self.subject_list)
+        
         
         #Colocar el layout principal en la ventana principal
-        self.setLayout(self.All_layout)
+        self.setLayout(self.main_layout)
 
     def add_subject(self):
         """ Inicia el formulario de ingreso de datos del empleado """
@@ -159,7 +150,7 @@ class Main(QWidget):
         if subjects:
             for subject in subjects:
                 self.subject_list.addItem(
-                    "{0} --- {1} ".format(subject[1], subject[6]))
+                    "Asignatura: {0} --- Aula: {1} --- Hora Entrada: {2} ".format(subject[1], subject[6], subject[2]))
                 
     def show_subject_list(self):
         """ obtiene las tuplas de empleados y las muestra en la lista """
