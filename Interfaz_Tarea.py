@@ -71,6 +71,7 @@ class Interfaz_Tarea(QWidget):
         self.btn_agregar.clicked.connect(self.ultimo_conjunto_de_tareas)
         self.btn_update = QPushButton("Modificar")
         self.btn_delete = QPushButton("Eliminar")
+        self.btn_delete.clicked.connect(self.eliminar_tarea)
 
         #Widgets
         self.label_Asignatura = QLabel("Nombre Asignaura: ")
@@ -134,7 +135,7 @@ class Interfaz_Tarea(QWidget):
         if tareas:
             for tarea in tareas:
                 self.homework_List.addItem(
-                    """• Asignatura: {0} Tarea: {1} Fecha:{2} """.format(tarea[1], tarea[2], tarea[3]))
+                    """{0} --- {1} Fecha:{2} """.format(tarea[1], tarea[2], tarea[3]))
 
     def ultimo_conjunto_de_tareas(self):
         """
@@ -145,7 +146,7 @@ class Interfaz_Tarea(QWidget):
         if tareas:
             for tarea in tareas:
                 self.homework_List.addItem(
-                    """ • {0} }} {1} }} {2} """.format(tarea[1], tarea[2], tarea[3]))
+                    """{0} --- {1} Fecha:{2} """.format(tarea[1], tarea[2], tarea[3]))
 
 
 
@@ -170,6 +171,33 @@ class Interfaz_Tarea(QWidget):
         else:
             QMessageBox.information(
                 self, "Advertencia", "Debes ingresar toda la informacion")
+
+    def eliminar_tarea(self):
+        """ ELimina la tarea seleccionada"""
+        if self.homework_List.selectedItems():
+            tarea = self.homework_List.currentItem().text()
+            id = tarea.split(" --- ")[0]
+
+            tarea = self.tarea_db.obtener_tarea_por_id(id)
+
+            yes = QMessageBox.Yes
+
+            if tarea:
+                question_text = ("¿Está seguro de eliminar la tarea {0}?".format(tarea[1]))
+                question = QMessageBox.question(self, "Advertencia", question_text,
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if question == QMessageBox.Yes:
+                    self.tarea_db.eliminar_tarea_por_id(tarea[1])
+                    QMessageBox.information(self, "Información", "¡Tarea eliminada satisfactoriamente!")
+                    self.homework_List.clear()
+                    self.conjunto_de_tareas()
+
+            else:
+                QMessageBox.information(self, "Advertencia", "Ha ocurrido un error. Reintente nuevamente")
+
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar un Tarea a eliminar")
 
         
 class TareaBd:
@@ -291,6 +319,38 @@ class TareaBd:
             tareas = cursor.execute(sqlQuery).fetchall()
             self.connection.commit()
             return tareas
+        except Error as e:
+            print(e)
+
+        return None
+
+    def obtener_tarea_por_id(self,id_Tarea):
+        """ Busca una tarea mediante el valor del id"""
+        sqlQuery = " SELECT * FROM Tarea WHERE IdAsignatura = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            tarea = cursor.execute(sqlQuery, (id_Tarea,)).fetchone()
+
+            return tarea
+        except Error as e:
+            print(e)
+
+        return None
+
+
+    def eliminar_tarea_por_id(self, id_Tarea):
+        """
+        Elimina una tarea mediante el valor del id Tarea.
+        """
+        sqlQuery = " DELETE FROM Tarea WHERE IdAsignatura = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlQuery, (id_Tarea,))
+            self.connection.commit()
+
+            return True
         except Error as e:
             print(e)
 
