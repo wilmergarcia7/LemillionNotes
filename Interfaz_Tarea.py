@@ -72,6 +72,8 @@ class Interfaz_Tarea(QWidget):
         self.btn_update = QPushButton("Modificar")
         self.btn_delete = QPushButton("Eliminar")
         self.btn_delete.clicked.connect(self.eliminar_tarea)
+        self.btn_Mostrar = QPushButton("Informacion")
+        self.btn_Mostrar.clicked.connect(self.mostrar_informacion_messagebox)
 
         #Widgets
         self.label_Asignatura = QLabel("Nombre Asignaura: ")
@@ -122,6 +124,7 @@ class Interfaz_Tarea(QWidget):
         self.botones_layout.addWidget(self.btn_agregar)
         self.botones_layout.addWidget(self.btn_update)
         self.botones_layout.addWidget(self.btn_delete)
+        self.botones_layout.addWidget(self.btn_Mostrar)
         
         self.setLayout(self.main_layout)
 
@@ -199,7 +202,33 @@ class Interfaz_Tarea(QWidget):
         else:
             QMessageBox.information(self, "Advertencia", "Favor seleccionar un Tarea a eliminar")
 
-        
+    def mostrar_informacion_messagebox(self):
+        """ Muestra todos los datos de un registro
+            en un messagebox
+        """
+        if self.homework_List.selectedItems():
+            tarea = self.homework_List.currentItem().text()
+            id = tarea.split(" --- ")[0]
+
+            tarea = self.tarea_db.obtener_tarea_por_id(id)
+
+            yes = QMessageBox.Ok
+
+            if tarea:
+                question_text = ("""
+                                NumeroDeTarea:{0}\n
+                                Asignatura:{1}\n
+                                Tarea:{2}\n
+                                Fecha:{3}\n
+                                Categoria:{4}\n
+                                Detalles:{5}\n
+                                """.format(tarea[0],tarea[1],tarea[2],tarea[3],tarea[4],tarea[5]))
+                question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+
+            if question == QMessageBox.Yes:
+                pass
+
+
 class TareaBd:
     """ Base de datos para Tarea"""
     def __init__(self,db_filename):
