@@ -67,8 +67,11 @@ class Interfaz_Tarea(QWidget):
         self.btn_agregar.clicked.connect(self.insert)
         self.btn_agregar.clicked.connect(self.ultimo_conjunto_de_tareas)
         self.btn_update = QPushButton("Modificar")
+        self.btn_update.clicked.connect(self.modificar_datos)
         self.btn_delete = QPushButton("Eliminar")
         self.btn_delete.clicked.connect(self.eliminar_tarea)
+        self.btn_Mostrar = QPushButton("Informacion")
+        self.btn_Mostrar.clicked.connect(self.mostrar_informacion_messagebox)
 
         #Widgets
         self.label_Asignatura = QLabel("Nombre Asignaura: ")
@@ -119,6 +122,7 @@ class Interfaz_Tarea(QWidget):
         self.botones_layout.addWidget(self.btn_agregar)
         self.botones_layout.addWidget(self.btn_update)
         self.botones_layout.addWidget(self.btn_delete)
+        self.botones_layout.addWidget(self.btn_Mostrar)
         
         self.setLayout(self.main_layout)
 
@@ -132,7 +136,7 @@ class Interfaz_Tarea(QWidget):
         if tareas:
             for tarea in tareas:
                 self.homework_List.addItem(
-                    """{0} --- {1} Fecha:{2} """.format(tarea[1], tarea[2], tarea[3]))
+                    """{0} --- {1} Fecha:{2} """.format(tarea[2], tarea[1], tarea[3]))
 
     def ultimo_conjunto_de_tareas(self):
         """
@@ -143,7 +147,7 @@ class Interfaz_Tarea(QWidget):
         if tareas:
             for tarea in tareas:
                 self.homework_List.addItem(
-                    """{0} --- {1} Fecha:{2} """.format(tarea[1], tarea[2], tarea[3]))
+                    """{0} --- {1} Fecha:{2} """.format(tarea[2], tarea[1], tarea[3]))
 
 
 
@@ -180,12 +184,12 @@ class Interfaz_Tarea(QWidget):
             yes = QMessageBox.Yes
 
             if tarea:
-                question_text = ("¿Está seguro de eliminar la tarea {0}?".format(tarea[1]))
+                question_text = ("¿Está seguro de eliminar la tarea {0}?".format(tarea[2]))
                 question = QMessageBox.question(self, "Advertencia", question_text,
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
                 if question == QMessageBox.Yes:
-                    self.tarea_db.eliminar_tarea_por_id(tarea[1])
+                    self.tarea_db.eliminar_tarea_por_id(tarea[2])
                     QMessageBox.information(self, "Información", "¡Tarea eliminada satisfactoriamente!")
                     self.homework_List.clear()
                     self.conjunto_de_tareas()
@@ -196,7 +200,45 @@ class Interfaz_Tarea(QWidget):
         else:
             QMessageBox.information(self, "Advertencia", "Favor seleccionar un Tarea a eliminar")
 
-        
+    def mostrar_informacion_messagebox(self):
+        """ Muestra todos los datos de un registro
+            en un messagebox
+        """
+        if self.homework_List.selectedItems():
+            tarea = self.homework_List.currentItem().text()
+            id = tarea.split(" --- ")[0]
+
+            tarea = self.tarea_db.obtener_tarea_por_id(id)
+
+            if tarea:
+                question_text = ("""
+                                NumeroDeTarea:{0}\n
+                                Asignatura:{1}\n
+                                Tarea:{2}\n
+                                Fecha:{3}\n
+                                Categoria:{4}\n
+                                Detalles:{5}\n
+                                """.format(tarea[0],tarea[1],tarea[2],tarea[3],tarea[4],tarea[5]))
+                question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+
+    def modificar_datos(self):
+        if self.homework_List.selectedItems():
+            tarea = self.homework_List.currentItem().text()
+            id = tarea.split(" --- ")[0]
+                
+            tarea = self.tarea_db.obtener_tarea_por_id(id)
+
+            if tarea:
+                self.input_Asignatura.setText("{0}".format(tarea[0]))
+                
+                self.input_Tarea.setText("{0}".format(tarea[1]))
+
+                self.input_fecha_de_entrega.setText("{0}".format(tarea[2])) 
+                
+                self.input_categria_tarea.setText("{0}".format(tarea[3])) 
+                
+                self.input_detalle.setText("{0}".format(tarea[4]))
+
 class TareaBd:
     """ Base de datos para Tarea"""
     def __init__(self,db_filename):
@@ -254,6 +296,7 @@ class TareaBd:
     def insert_categoria_tarea(self):
         """ """
         sqlInsert = """
+                     
                     INSERT INTO CategoriaTarea (NombreCategoria)
                                             VALUES	('Escrito'),
                                                 ('Documento'),
@@ -323,7 +366,7 @@ class TareaBd:
 
     def obtener_tarea_por_id(self,id_Tarea):
         """ Busca una tarea mediante el valor del id"""
-        sqlQuery = " SELECT * FROM Tarea WHERE IdAsignatura = ?;"
+        sqlQuery = " SELECT * FROM Tarea WHERE Tarea = ?;"
 
         try:
             cursor = self.connection.cursor()
@@ -340,7 +383,7 @@ class TareaBd:
         """
         Elimina una tarea mediante el valor del id Tarea.
         """
-        sqlQuery = " DELETE FROM Tarea WHERE IdAsignatura = ?;"
+        sqlQuery = " DELETE FROM Tarea WHERE Tarea = ?;"
 
         try:
             cursor = self.connection.cursor()
