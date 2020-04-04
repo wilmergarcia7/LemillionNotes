@@ -143,7 +143,7 @@ class Interfaz_Evento(QWidget):
 
     def ultimo_conjunto_eventos(self):
         """
-        Ultimo registro
+        Ultimo registro de eventos
         """
 
         eventos = self.evento_db.obtener_ultimo_evento()
