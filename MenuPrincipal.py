@@ -154,7 +154,7 @@ class AgendaMenu(QWidget):
                                         """)
         self.btn_Evento.clicked.connect(self.add_InterfazEvento)
         
-        self.btn_Retorno = QPushButton("←")
+        self.btn_Retorno = QPushButton("⮈")
         self.btn_Retorno.setFixedWidth(60)
         self.btn_Retorno.setFixedHeight(60)
         self.btn_Retorno.setMask(QRegion(QRect(-1,-1,60,60), QRegion.Ellipse))
