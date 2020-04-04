@@ -212,8 +212,6 @@ class Interfaz_Tarea(QWidget):
 
             tarea = self.tarea_db.obtener_tarea_por_id(id)
 
-            yes = QMessageBox.Ok
-
             if tarea:
                 question_text = ("""
                                 NumeroDeTarea:{0}\n
@@ -224,9 +222,6 @@ class Interfaz_Tarea(QWidget):
                                 Detalles:{5}\n
                                 """.format(tarea[0],tarea[1],tarea[2],tarea[3],tarea[4],tarea[5]))
                 question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
-
-            if question == QMessageBox.Yes:
-                pass
 
 
 class TareaBd:
