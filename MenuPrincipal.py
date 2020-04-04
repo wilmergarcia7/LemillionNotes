@@ -51,6 +51,10 @@ class Main(QWidget):
                                                         border-radius: 100px} 
                                             QPushButton:pressed {background-color: #D5939C;}
                                             """)
+        self.label_Asignatura = QLabel("Asignatura")
+        self.label_Asignatura.setStyleSheet("""font: bold 14px;""")
+        self.label_Asignatura.setFixedHeight(20)
+        self.label_Asignatura.setFixedWidth(80)
 
 
 
@@ -61,25 +65,34 @@ class Main(QWidget):
         self.btn_Agenda.setStyleSheet("""QPushButton { image :url(Resource/Agenda.jpg);
                                                         border-radius: 29.4px} 
                                             QPushButton:pressed {background-color: #D5939C;}
+                                            QLabel 
                                         """)
+        self.label_Agenda = QLabel("Agenda")
+        self.label_Agenda.setStyleSheet("""font: bold 14px;""")
+        self.label_Agenda.setFixedHeight(20)
+        self.label_Agenda.setFixedWidth(60)
         self.btn_Agenda.clicked.connect(self.add_MenuAgenda)
         
         #self.btn_Agenda.move(171,80)
     def layouts(self):
         """ Layouts que compone el menu principal"""
         #Layouts
-        self.main_layout = QHBoxLayout()
-        self.boton1_layout = QHBoxLayout()
-        self.boton2_layout = QHBoxLayout()
+        self.main_layout = QVBoxLayout()
+        self.boton_layout = QHBoxLayout()
+      
 
         #Agregar layouts a layout
-        self.main_layout.addLayout(self.boton1_layout)
-        self.main_layout.addLayout(self.boton2_layout)
+        self.main_layout.addLayout(self.boton_layout)
+
 
         #Agregar widgetc a los layouts
-        self.boton1_layout.addWidget(self.btn_Agenda)
-        self.boton2_layout.addWidget(self.btn_Asignatura)
+        self.boton_layout.addWidget(self.label_Agenda) 
+        self.boton_layout.addWidget(self.btn_Agenda)
+        self.boton_layout.addWidget(self.label_Asignatura)
+        self.boton_layout.addWidget(self.btn_Asignatura)
 
+
+        
         #Colocar el layout priniapl en la ventana principal
         self.setLayout(self.main_layout)
 
@@ -131,6 +144,11 @@ class AgendaMenu(QWidget):
                                             QPushButton:pressed {background-color: #D5939C;}
                                         """)
         self.btn_Tarea.clicked.connect(self.add_InterfazTarea)
+        self.label_Tarea = QLabel("Tarea")
+        self.label_Tarea.setStyleSheet("""font: bold 14px;""")
+        self.label_Tarea.setFixedHeight(20)
+        self.label_Tarea.setFixedWidth(50)
+        self.label_Tarea.setAlignment(Qt.AlignCenter)
 
 
         self.btn_Examen = QPushButton()
@@ -142,6 +160,11 @@ class AgendaMenu(QWidget):
                                             QPushButton:pressed {background-color: #D5939C;}
                                         """)
         self.btn_Examen.clicked.connect(self.add_InterfazExamen)
+        self.label_Examen = QLabel("Examen")
+        self.label_Examen.setStyleSheet("""font: bold 14px;""")
+        self.label_Examen.setFixedHeight(20)
+        self.label_Examen.setFixedWidth(60)
+        self.label_Examen.setAlignment(Qt.AlignCenter)
 
 
         self.btn_Evento = QPushButton()
@@ -153,14 +176,21 @@ class AgendaMenu(QWidget):
                                             QPushButton:pressed {background-color: #D5939C;}
                                         """)
         self.btn_Evento.clicked.connect(self.add_InterfazEvento)
+        self.label_Evento = QLabel("Evento")
+        self.label_Evento.setStyleSheet("""font: bold 14px;""")
+        self.label_Evento.setFixedHeight(20)
+        self.label_Evento.setFixedWidth(60)
+        self.label_Evento.setAlignment(Qt.AlignCenter)
+        
         
         self.btn_Retorno = QPushButton("⮈")
         self.btn_Retorno.setFixedWidth(60)
-        self.btn_Retorno.setFixedHeight(60)
-        self.btn_Retorno.setMask(QRegion(QRect(-1,-1,60,60), QRegion.Ellipse))
-        self.btn_Retorno.setStyleSheet(""" background-color: #FAD500;
+        self.btn_Retorno.setFixedHeight(30)
+        self.btn_Retorno.setStyleSheet("""  border-style: none;
+                                            background-color: yellow;
                                             font: 20px;
-                                            color: black;
+                                            border-color: yellow;
+                                            background-image: url(Resource/Boton.jpg)
                                             """)
         self.btn_Retorno.clicked.connect(self.Add_MenuPrincipal)
       
@@ -175,9 +205,15 @@ class AgendaMenu(QWidget):
         self.main_layout.addLayout(self.botones_layout)
 
         #Agregar widgetc a los layouts
+        self.botones_layout.addWidget(self.label_Evento)
         self.botones_layout.addWidget(self.btn_Evento)
+
+        self.botones_layout.addWidget(self.label_Examen)
         self.botones_layout.addWidget(self.btn_Examen)
+
+        self.botones_layout.addWidget(self.label_Tarea)
         self.botones_layout.addWidget(self.btn_Tarea)
+
         self.botones_layout.addWidget(self.btn_Retorno)
 
         #Colocar el layout priniapl en la ventana principal
