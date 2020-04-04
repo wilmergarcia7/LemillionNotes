@@ -37,7 +37,7 @@ class Interfaz_Tarea(QWidget):
         """
         self.tittle = QLabel("T A R E A ")
         self.tittle.setFixedHeight(70)
-        self.tittle.setFixedWidth(457)
+        self.tittle.setFixedWidth(417)
         self.tittle.setStyleSheet("""color: white;
                                     font-size: 30px;
                                     background-image: url(Resource/Banner.jpg);
@@ -51,11 +51,19 @@ class Interfaz_Tarea(QWidget):
         #Lista
         self.homework_List = QListWidget()
         self.homework_List.setStyleSheet("""
-                                        background-image: url(Resource/Tarea_Banner_List.jpg);
+                                        
+                                        background-image: url(Resource/list.jpg);
                                         font-size: 20px;
+                                        color: white;
                                         """)
         
         self.btn_retorno = QPushButton("←")
+        self.btn_retorno.setStyleSheet("""
+                                        color:white;
+                                         border-style: none;
+                                         background-image: url(Resource/BoronRetornoInterfaz.jpg)
+                                         """)
+        self.btn_retorno.setFixedHeight(70)
         self.btn_retorno.setFixedWidth(40)
 
         self.btn_agregar = QPushButton("Agregar")
@@ -84,13 +92,15 @@ class Interfaz_Tarea(QWidget):
     def layouts(self):
         
         self.main_layout = QVBoxLayout()
-        self.top_layout = QVBoxLayout()
+        self.top_layout = QHBoxLayout()
         self.bottom_layout = QFormLayout()
         self.botones_layout = QHBoxLayout()
         self.down_layout = QVBoxLayout()
 
         # Agregar los widgets al top layout
         self.top_layout.addWidget(self.tittle)
+        self.top_layout.addWidget(self.btn_retorno)
+
         self.down_layout.addWidget(self.label_ver_tareas)
         self.down_layout.addWidget(self.homework_List)
 
@@ -101,7 +111,7 @@ class Interfaz_Tarea(QWidget):
         self.main_layout.addLayout(self.down_layout)
         
         #bottom
-        self.bottom_layout.addRow(self.btn_retorno)
+        #self.bottom_layout.addRow(self.btn_retorno)
         self.bottom_layout.addRow(self.label_Asignatura, self.input_Asignatura)
         self.bottom_layout.addRow(self.label_Tarea, self.input_Tarea)
         self.bottom_layout.addRow(self.label_fecha_de_entrega, self.input_fecha_de_entrega)
@@ -124,7 +134,7 @@ class Interfaz_Tarea(QWidget):
         if tareas:
             for tarea in tareas:
                 self.homework_List.addItem(
-                    """ • {0} }} {1} }} {2} """.format(tarea[1], tarea[2], tarea[3]))
+                    """• Asignatura: {0} Tarea: {1} Fecha:{2} """.format(tarea[1], tarea[2], tarea[3]))
 
     def ultimo_conjunto_de_tareas(self):
         """
