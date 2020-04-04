@@ -68,7 +68,7 @@ class Interfaz_Evento(QWidget):
 
         self.btn_new = QPushButton("Agregar")
         self.btn_new.clicked.connect(self.insert)
-        self.btn_new.clicked.connect(self.ultimo_conjunto_eventos)
+        #self.btn_new.clicked.connect(self.ultimo_conjunto_eventos)
         self.btn_update = QPushButton("Modificar")
         self.btn_delete = QPushButton("Eliminar")
 
@@ -136,21 +136,28 @@ class Interfaz_Evento(QWidget):
         Obtiene todos los registros de la tabla eventos
         """
         eventos = self.evento_db.obtener_todos_los_eventos()
-        if eventos:
-            for evento in eventos:
-                self.evento_list.addItem(
-                    """• Evento: {0} Evento: {1} Fecha:{2} """.format(evento[1], evento[2], evento[3]))
 
-    def ultimo_conjunto_eventos(self):
-        """
-        Ultimo registro de eventos
-        """
-
-        eventos = self.evento_db.obtener_ultimo_evento()
         if eventos:
             for evento in eventos:
                 self.evento_list.addItem(
                     """ • {0} }} {1} }} {2} """.format(evento[1], evento[2], evento[3]))
+
+
+    def show_evento_list(self):
+        """ obtiene las tuplas de eventos y las muestra en la lista """
+        # Obtener el valor de la identidad del empleado seleccionado
+        evento = self.evento_list.currentItem().text()
+        id = evento.split(" --- ")[0]
+
+        if id:
+            name_subject = QLabel(evento[1])
+            event = QLabel(evento[2])
+            date = QLabel(evento[3])
+            location = QLabel(evento[4])
+            detail = QLabel(evento[5])
+            
+
+    
 
     def insert(self):
         """
@@ -168,6 +175,8 @@ class Interfaz_Evento(QWidget):
                 self.evento_db.add_Evento(evento)
                 QMessageBox.information(
                     self, "Información", "Evento agregado correctamente")
+                #self.close()
+                #self.main = Main()    
             except Error as e:
                 QMessageBox.information(
                     self, "Error", "Error en el proceso de agregar evento")
@@ -188,10 +197,13 @@ class EventoBd:
        
         self.evento_query = """
                                 CREATE TABLE IF NOT EXISTS Evento(
-                                IdEvento INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                                Evento TEXT NOT NULL,
-                                Fecha TEXT NOT NULL,
-                                Detalle TEXT,
+                                idEvento INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                name_subject TEXT NOT NULL,
+                                event TEXT NOT NULL,
+                                date TEXT NOT NULL,
+                                location TEXT NOT NULL,
+                                detail TEXT,
+                                CONSTRAINT UQ_nameSubject UNIQUE (nameSubject)
                                 );
                             """
         
@@ -233,9 +245,9 @@ class EventoBd:
         """
         sqlInsert = """
                     INSERT INTO Evento(
-                        IdEvento, Evento, 
-                        Fecha, Detalle)
-                    VALUES(?, ?, ?, ?)
+                        IdEvento, name_subject, event, 
+                        date, location, detail)
+                    VALUES(?, ?, ?, ?, ?, ?)
                     """
 
         try:
@@ -264,18 +276,6 @@ class EventoBd:
 
         return None
     
-    def obtener_ultimo_evento(self):
-        sqlQuery ="SELECT * FROM Evento ORDER BY IdEvento DESC LIMIT 1;" 
-
-        try:
-            cursor = self.connection.cursor()
-            eventos = cursor.execute(sqlQuery).fetchall()
-            self.connection.commit()
-            return eventos
-        except Error as e:
-            print(e)
-
-        return None
     
 
 
