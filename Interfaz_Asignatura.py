@@ -23,7 +23,7 @@ class Main(QWidget):
     """
     def __init__(self):
         super().__init__()
-        self.subject_db = SubjectDB("subject.db")
+        self.subject_db = SubjectDB("SubjectDB.db")
         self.setWindowTitle("Asignatura")
         self.setGeometry(450, 450, 457, 609)
         self.UI()
@@ -46,11 +46,18 @@ class Main(QWidget):
                                     background-image: url(Resource/Banner.jpg);
                                     """)
         
-        self.subject_list = QListWidget()     
+        self.subject_list = QListWidget()
+         
         self.btn_new = QPushButton("Agregar")
         self.btn_new.clicked.connect(self.add_subject)
+        self.btn_new.clicked.connect(self.show_list)    
         self.btn_update = QPushButton("Modificar")
+        self.btn_update.clicked.connect(self.update_subject)
         self.btn_delete = QPushButton("Eliminar")
+        self.btn_delete.clicked.connect(self.delete_subject)
+        self.btn_information = QPushButton("Información")
+        self.btn_information.clicked.connect(self.show_information_messagebox)
+        
         
         # Center Layout Widgets
         self.label_name_subject = QLabel("Nombre Asignatura: ")
@@ -113,6 +120,7 @@ class Main(QWidget):
         self.button_layout.addWidget(self.btn_new)
         self.button_layout.addWidget(self.btn_update)
         self.button_layout.addWidget(self.btn_delete)
+        self.button_layout.addWidget(self.btn_information)
         
         # Lista de asignaturas 
         self.list_layout.addWidget(self.subject_list)
@@ -144,36 +152,102 @@ class Main(QWidget):
                 self, "Advertencia", "Debes ingresar toda la información")
 
     def set_subject_list(self):
-        """ Obtiene las tuplas de empleados y las muestra en la lista """
+        """ Obtiene las tuplas de asignaturas y las muestra en la lista """
         subjects = self.subject_db.get_all_subjects()
 
         if subjects:
             for subject in subjects:
                 self.subject_list.addItem(
-                    "Asignatura: {0} --- Aula: {1} --- Hora Entrada: {2} ".format(subject[1], subject[6], subject[2]))
+                    "{0} --- Aula: {1} --- Hora entrada: {2}".format(subject[1], subject[6], subject[2]))
                 
-    def show_subject_list(self):
-        """ obtiene las tuplas de empleados y las muestra en la lista """
-        # Obtener el valor de la identidad del empleado seleccionado
-        subject = self.subject_list.currentItem().text()
-        id = subject.split(" --- ")[0]
-        
-        # crear y agregar los widget necesarios para mostrar la información
-        if id:
-            name_subject = QLabel(subject[1])
-            checkIn = QLabel(subject[2])
-            checkOut = QLabel(subject[3])
-            days = QLabel(subject[4])
-            professor = QLabel(subject[5])
-            classroom = QLabel(subject[6])           
+    def show_list(self):
+        """
+        Ultimo dato de los registros
+        """
+        subjects = self.subject_db.get_only_last_subject()
+
+        if subjects:
+            for subject in subjects:
+                self.subject_list.addItem(
+                    "{0} --- Aula: {1} --- Hora entrada: {2}".format(subject[1], subject[6], subject[2]))
+    
+   
+    def delete_subject(self):
+        """ Elimina la asignatura que se encuentra seleccionada """
+        # Obtener el valor de la asignatura seleccionada
+        # Verificar que un elemento de la lista se encuentre seleccionado
+        if self.subject_list.selectedItems():
+            subject = self.subject_list.currentItem().text()
+            id = subject.split(" --- ")[0]
+
+            subject = self.subject_db.get_subjects_by_id(id)
+
+            yes = QMessageBox.Yes
+
+            if subject:
+                question_text = ("¿Está seguro de eliminar la asignatura {0}?".format(subject[1]))
+                question = QMessageBox.question(self, "Advertencia", question_text,
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if question == QMessageBox.Yes:
+                    self.subject_db.delete_subject_by_id(subject[1])
+                    QMessageBox.information(self, "Información", "asignatura eliminada satisfactoriamente!")
+                    self.subject_list.clear()
+                    self.set_subject_list()
+
+            else:
+                QMessageBox.information(self, "Advertencia", "Ha ocurrido un error. Reintente nuevamente")
+
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar la asignatura que desea a eliminar")
+
+    def show_information_messagebox(self):
+        """ Muestra todos los datos de un registro
+            en un messagebox
+        """
+        if self.subject_list.selectedItems():
+            subject = self.subject_list.currentItem().text()
+            id = subject.split(" --- ")[0]
+
+            subject = self.subject_db.get_subjects_by_id(id)
+
+            if subject:
+                question_text = ("""
+                                Asignatura: {0}\n
+                                Hora de Entrada: {1}\n
+                                Hora de Salida: {2}\n
+                                Días: {3}\n
+                                Catedrático: {4}\n
+                                Aula: {5}\n
+                                """.format(subject[1],subject[2],subject[3],subject[4],subject[5],subject[6]))
+                question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+    
+    def update_subject(self):
+        if self.subject_list.selectedItems():
+            subject = self.subject_list.currentItem().text()
+            id = subject.split(" --- ")[0]
                 
-            #self.left_layout.addRow("Asignatura", name_subject)
-            #self.left_layout.addRow("Hora Entrada", checkIn)
-            #self.left_layout.addRow("Hora Salida", checkOut)
-            #self.left_layout.addRow("Días", days)
-            #self.left_layout.addRow("Hora Entrada", checkIn)
-            #self.left_layout.addRow("Catedratico", professor)
-            #self.left_layout.addRow("Aula", classroom)
+            subject = self.subject_db.get_subjects_by_id(id)
+            
+            yes = QMessageBox.Yes
+
+            if subject:
+                self.input_name_subject.setText("{0}".format(subject[1]))
+                
+                self.input_check_in.setTime("{0}".format(subject[2]))
+
+                self.input_check_out.setTime("{0}".format(subject[3])) 
+                
+                self.input_day.setText("{0}".format(subject[4])) 
+                
+                self.input_professor.setText("{0}".format(subject[5]))
+                
+                self.input_classroom.setText("{0}".format(subject[6]))                  
+                self.subject_db.update_subject_by_id(subject[1])
+                QMessageBox.information(self, "Información", "asignatura eliminada satisfactoriamente!")
+                self.subject_list.clear()
+                self.set_subject_list()
+                
             
             
 class SubjectDB:
@@ -225,7 +299,7 @@ class SubjectDB:
 
     def add_subject(self, subject):
         """
-        Realiza una inserción a la tabla de empleados.
+        Realiza una inserción a la tabla de asignaturas.
         :param subject: Una estructura que contiene
                          los datos del empleado.
         :return:
@@ -253,8 +327,82 @@ class SubjectDB:
         try:
             cursor = self.connection.cursor()
             subjects = cursor.execute(sqlQuery).fetchall()
-
+            self.connection.commit()
             return subjects
+        except Error as e:
+            print(e)
+
+        return None
+    
+    def get_subjects_by_id(self, id):
+        """
+        Busca una asignatura mediante el valor del id.
+        param: id: El valor de la asignatura.
+        :return: Un arreglo con los atributos de la asignatura.
+        """
+        sqlQuery = " SELECT * FROM subject WHERE nameSubject = ?"
+
+        try:
+            cursor = self.connection.cursor()
+            # fetchone espera que se retorne una tupla (1,)
+            subject = cursor.execute(sqlQuery, (id,)).fetchone()
+            
+            return subject
+        except Error as e:
+            print(e)
+
+        return None
+    
+    def get_only_last_subject(self):
+        sqlQuery ="SELECT * FROM subject ORDER BY nameSubject DESC LIMIT 1;"
+
+        try:
+            cursor = self.connection.cursor()
+            subjects = cursor.execute(sqlQuery).fetchall()
+            self.connection.commit()
+            return subjects
+        except Error as e:
+            print(e)
+
+        return None
+
+    def delete_subject_by_id(self, id):
+        """
+        Elimina una asignatura mediante el valor del id.
+        param: id: El valor de la asignatura.
+        :return: True si la asginatura se eliminó. None en caso contrario.
+        """
+        sqlQuery = "DELETE FROM subject WHERE nameSubject = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlQuery, (id,))
+            self.connection.commit()
+
+            return True
+        except Error as e:
+            print(e)
+
+        return None
+    
+    def update_subject_by_id(self, id):
+        """
+        Actualiza una asignatura mediante el valor del id.
+        param: id: El valor de la asignatura.
+        :return: True si la asginatura se actualizó. None en caso contrario.
+        """
+        sqlQuery = """UPDATE subject set 
+                        nameSubject = ?, chechkIn = ?, chechkOut = ?,
+	                    day = ?, professor = ?, classroom = ?
+                        WHERE nameSubject = ?;
+                   """
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlQuery, (id,))
+            self.connection.commit()
+
+            return True
         except Error as e:
             print(e)
 
