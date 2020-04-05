@@ -43,9 +43,6 @@ class Interfaz_Tarea(QWidget):
                                     font-size: 30px;
                                     background-image: url(Resource/Banner.jpg);
                                     """)
-
-
-        
         self.label_ver_tareas = QLabel("  ")
         self.tittle.adjustSize()
 
