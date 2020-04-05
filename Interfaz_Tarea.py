@@ -27,6 +27,7 @@ class Interfaz_Tarea(QWidget):
         self.show()
 
     def UI(self):
+        self.estado = 0
         self.main_design()
         self.layouts()
         self.conjunto_de_tareas()
@@ -176,6 +177,72 @@ class Interfaz_Tarea(QWidget):
             QMessageBox.information(
                 self, "Advertencia", "Debes ingresar toda la informacion")
 
+    def modificar_datos(self):
+
+        if self.estado == 0:
+            if self.homework_List.selectedItems():
+                tarea = self.homework_List.currentItem().text()
+                id = tarea.split(" --- ")[0]
+                    
+                tarea = self.tarea_db.obtener_tarea_por_id(id)
+
+                if tarea:
+                    self.input_Asignatura.setText("{0}".format(tarea[1]))
+                    
+                    self.input_Tarea.setText("{0}".format(tarea[2]))
+
+                    self.input_fecha_de_entrega.setText("{0}".format(tarea[3])) 
+                    
+                    self.input_categria_tarea.setText("{0}".format(tarea[4])) 
+                    
+                    self.input_detalle.setText("{0}".format(tarea[5]))
+                    self.btn_update.setText("Guardar")
+                    self.estado = 1
+
+        else:  
+            #Obtengo el id de la selccion
+            if self.homework_List.selectedItems() and self.input_Tarea.text() != "":
+
+                #campo = (self.input_Tarea.text())
+
+                tarea = self.homework_List.currentItem().text()
+                id = tarea.split(" --- ")[0]
+                tarea = self.tarea_db.obtener_tarea_por_id(id)
+
+                id_para_consulta = int(tarea[0])
+
+                #datos = (id_para_consulta,campo)
+                try:
+                    self.tarea_db.update_Tarea((self.input_Asignatura.text(), 
+                                                self.input_Tarea.text(),
+                                                self.input_fecha_de_entrega.text(), 
+                                                self.input_categria_tarea.text(), 
+                                                self.input_detalle.text(),
+                                                id_para_consulta))
+                    QMessageBox.information(self, "Información", "Tarea actulizada correctamente")
+                    self.homework_List.clear()
+                    self.conjunto_de_tareas()
+                    self.vaciar_inputs()
+
+                except Error as e:
+                    QMessageBox.information(
+                        self, "Error", "Error al momento de actualizar la tarea")
+            else:
+                QMessageBox.information(
+                    self, "Advertencia", "Debes ingresar toda la informacion")
+            self.btn_update.setText("Modificar")
+            self.estado = 0
+
+    def vaciar_inputs(self):
+        """
+        Me deja vacio los inputs sin los valores que le cargue.
+        """
+        self.input_Asignatura.setText("") 
+        self.input_Tarea.setText("")
+        self.input_fecha_de_entrega.setText("")         
+        self.input_categria_tarea.setText("")             
+        self.input_detalle.setText("")
+
     def eliminar_tarea(self):
         """ ELimina la tarea seleccionada"""
         if self.homework_List.selectedItems():
@@ -224,23 +291,9 @@ class Interfaz_Tarea(QWidget):
                                 """.format(tarea[0],tarea[1],tarea[2],tarea[3],tarea[4],tarea[5]))
                 question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
 
-    def modificar_datos(self):
-        if self.homework_List.selectedItems():
-            tarea = self.homework_List.currentItem().text()
-            id = tarea.split(" --- ")[0]
-                
-            tarea = self.tarea_db.obtener_tarea_por_id(id)
+    
 
-            if tarea:
-                self.input_Asignatura.setText("{0}".format(tarea[0]))
-                
-                self.input_Tarea.setText("{0}".format(tarea[1]))
 
-                self.input_fecha_de_entrega.setText("{0}".format(tarea[2])) 
-                
-                self.input_categria_tarea.setText("{0}".format(tarea[3])) 
-                
-                self.input_detalle.setText("{0}".format(tarea[4]))
 
 class TareaBd:
     """ Base de datos para Tarea"""
@@ -335,6 +388,26 @@ class TareaBd:
             cursor.execute(sqlInsert, Tarea)
             # Indicarle al motor de base de datos
             # que los cambios sean persistentes
+            self.connection.commit()
+        except Error as e:
+            print(e)
+
+    def update_Tarea(self, Tarea):
+        """
+        Query que se encarga de la actulizacion de datos
+        """
+        sqlUpdate = """
+                    UPDATE Tarea 
+                    SET IdAsignatura = ?,
+                        Tarea = ? ,
+                        Fecha = ?,
+                        IdCategoria = ?,
+                        Detalles = ?                  
+                    WHERE IdTarea = ?;
+                    """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlUpdate,Tarea)
             self.connection.commit()
         except Error as e:
             print(e)
