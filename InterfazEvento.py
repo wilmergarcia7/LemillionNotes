@@ -68,7 +68,7 @@ class Interfaz_Evento(QWidget):
 
         self.btn_new = QPushButton("Agregar")
         self.btn_new.clicked.connect(self.insert)
-        #self.btn_new.clicked.connect(self.ultimo_conjunto_eventos)
+        self.btn_new.clicked.connect(self.ultimo_conjunto_eventos)
         self.btn_update = QPushButton("Modificar")
         self.btn_delete = QPushButton("Eliminar")
 
@@ -142,22 +142,17 @@ class Interfaz_Evento(QWidget):
                 self.evento_list.addItem(
                     """ • {0} }} {1} }} {2} """.format(evento[1], evento[2], evento[3]))
 
+    def ultimo_conjunto_eventos(self):
+        """
+        Ultimo registro de eventos
+        """
 
-    def show_evento_list(self):
-        """ obtiene las tuplas de eventos y las muestra en la lista """
-        # Obtener el valor de la identidad del empleado seleccionado
-        evento = self.evento_list.currentItem().text()
-        id = evento.split(" --- ")[0]
+        eventos = self.evento_db.obtener_ultimo_evento()
 
-        if id:
-            name_subject = QLabel(evento[1])
-            event = QLabel(evento[2])
-            date = QLabel(evento[3])
-            location = QLabel(evento[4])
-            detail = QLabel(evento[5])
-            
-
-    
+        if eventos:
+            for evento in eventos:
+                self.evento_list.addItem(
+                    """ • {0} }} {1} }} {2} """.format(evento[1], evento[2], evento[3]))
 
     def insert(self):
         """
@@ -194,19 +189,27 @@ class EventoBd:
         Incializador de la clase
         """
         self.connection = self.create_connection(db_filename)
+
+        self.asignatura_evento  = """
+                                    CREATE TABLE IF NOT EXISTS AsignaturaEvento(
+                                        IdAsignatura INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                        NombreAsignatura NVARCHAR(10)
+                                    );
+                                  """
        
         self.evento_query = """
                                 CREATE TABLE IF NOT EXISTS Evento(
-                                idEvento INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                                name_subject TEXT NOT NULL,
-                                event TEXT NOT NULL,
-                                date TEXT NOT NULL,
-                                location TEXT NOT NULL,
-                                detail TEXT,
-                                CONSTRAINT UQ_nameSubject UNIQUE (nameSubject)
+                                    IdEvento INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                    IdAsignatura INTEGER,
+                                    Evento TEXT NOT NULL,
+                                    Fecha TEXT NOT NULL,
+                                    Ubicacion TEXT NOT NULL,
+                                    Detalle TEXT,
+                                    FOREIGN KEY (IdAsignatura)
+                                        REFERENCES AsignaturaEvento (IdAsignatura)
                                 );
                             """
-        
+        self.create_table(self.connection,self.asignatura_evento)
         #self.insert_asignatura_evento()
         self.create_table(self.connection ,self.evento_query)
 
@@ -237,6 +240,10 @@ class EventoBd:
         except Error as e:
             print(e)
     
+   
+
+    
+
     def add_Evento(self, Evento):
         """
         Insertar en la tabla evento
@@ -245,9 +252,9 @@ class EventoBd:
         """
         sqlInsert = """
                     INSERT INTO Evento(
-                        IdEvento, name_subject, event, 
-                        date, location, detail)
-                    VALUES(?, ?, ?, ?, ?, ?)
+                        IdAsignatura, Evento, Fecha, Ubicacion,
+                        Detalle)
+                    VALUES(?, ?, ?, ?, ?)
                     """
 
         try:
@@ -269,13 +276,24 @@ class EventoBd:
             cursor = self.connection.cursor()
             eventos = cursor.execute(sqlQuery).fetchall()
             self.connection.commit()
-
             return eventos
         except Error as e:
             print(e)
 
         return None
     
+    def obtener_ultimo_evento(self):
+        sqlQuery ="SELECT * FROM Evento ORDER BY IdEvento DESC LIMIT 1;" 
+
+        try:
+            cursor = self.connection.cursor()
+            eventos = cursor.execute(sqlQuery).fetchall()
+            self.connection.commit()
+            return eventos
+        except Error as e:
+            print(e)
+
+        return None
     
 
 
@@ -285,4 +303,4 @@ def main():
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
-    main() 
+    main()
