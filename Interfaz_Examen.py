@@ -6,8 +6,7 @@
 # Fecha: En el año 1600
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QFont, QIcon, QRegion, QFontMetrics, QPixmap
+from PyQt5.QtGui import QPixmap, QFont
 import sys
 import os
 import sqlite3
@@ -20,11 +19,11 @@ from PIL import Image
 #from . import WidgetBase
 class Exam_interfaz(QWidget):
     """
-    Ventana principal de la aplicacion.
+    Ventana principal de examen.
     """
     def __init__(self):
         super().__init__()
-        self.examen_db = examenBd("lemilion.bd")
+        self.examen_db = examenBd("examen.bd")
         self.setWindowTitle("Examen")
         self.setGeometry(450, 450, 457,609)
         self.UI()
@@ -33,9 +32,9 @@ class Exam_interfaz(QWidget):
         
 
     def UI(self):
+        self.estado = 0
         self.Exam_interfaz_design()
-        self.layouts()
-        self.consultar()
+        self.layouts_exam()
         self.conjunto_de_examen()
 
     def Exam_interfaz_design(self):
@@ -73,7 +72,11 @@ class Exam_interfaz(QWidget):
         self.btn_new.clicked.connect(self.insert_exam)
         self.btn_new.clicked.connect(self.ultimo_conjunto_de_Examen)
         self.btn_update = QPushButton("Modificar")
+        self.btn_update.clicked.connect(self.modificar_examen)
         self.btn_delete = QPushButton("Eliminar")
+        self.btn_delete.clicked.connect(self.eliminar_examen)
+        self.btn_Mostrar = QPushButton("Informacion")
+        self.btn_Mostrar.clicked.connect(self.mostrar_informacion_messagebox)
         
         # Center Layout Widgets
         self.label_Asignature = QLabel("Asignatura: ")
@@ -96,12 +99,12 @@ class Exam_interfaz(QWidget):
         self.input_detail = QLineEdit()
         self.input_detail.setPlaceholderText("Agregar un detalle")
         
-    def layouts(self):
+    def layouts_exam(self):
         """ Layouts que compone la ventana de examen"""
         self.Exam_interfaz_layout = QVBoxLayout()
         self.top_layout = QVBoxLayout()
         self.boton_exam_layout = QFormLayout()
-        self.botobes_exam_layout = QHBoxLayout()
+        self.botones_exam_layout = QHBoxLayout()
         self.down_layout = QVBoxLayout()
     
       # Agregar los widgets al top layout
@@ -113,7 +116,7 @@ class Exam_interfaz(QWidget):
         # Agregar los widgets (childrens) al Exam_interfaz_layout
         self.Exam_interfaz_layout.addLayout(self.top_layout,30)
         self.Exam_interfaz_layout.addLayout(self.boton_exam_layout)
-        self.Exam_interfaz_layout.addLayout(self.botobes_exam_layout,10)
+        self.Exam_interfaz_layout.addLayout(self.botones_exam_layout,10)
         self.Exam_interfaz_layout.addLayout(self.down_layout)
         
         #boton_exam
@@ -123,23 +126,14 @@ class Exam_interfaz(QWidget):
         self.boton_exam_layout.addRow(self.label_category, self.input_category)
         self.boton_exam_layout.addRow(self.label_detail, self.input_detail)
 
-        self.botobes_exam_layout.addWidget(self.btn_new)
-        self.botobes_exam_layout.addWidget(self.btn_update)
-        self.botobes_exam_layout.addWidget(self.btn_delete)
-        
+        self.botones_exam_layout.addWidget(self.btn_new)
+        self.botones_exam_layout.addWidget(self.btn_update)
+        self.botones_exam_layout.addWidget(self.btn_delete)
+        self.botones_exam_layout.addWidget(self.btn_Mostrar)
+
         self.setLayout(self.Exam_interfaz_layout)
 
-    def consultar(self):
-        if self.exam_list.selectedItems():
-            Exam_interfaz = self.exam_list.currentItem().text()
-            
-            QMessageBox.Yes
-
-            if Exam_interfaz:
-                question_text=f"desea eliminar{Exam_interfaz[1]}"
-                question = QMessageBox.question(self, "advertencia",question_text,QMessageBox.Yes | QMessageBox.No,QMessageBox.No)
-
-
+  
     def conjunto_de_examen(self):
         """ 
         Obtiene todos los registros en la tabla examen
@@ -186,6 +180,125 @@ class Exam_interfaz(QWidget):
         else:
             QMessageBox.information(
                 self, "Advertencia", "Debes ingresar toda la informacion")
+    
+    def modificar_examen(self):
+
+        if self.estado == 0:
+            if self.exam_list.selectedItems():
+                examen = self.exam_list.currentItem().text()
+                id = examen.split(" --- ")[0]
+
+                #no retorna nada  
+                examen = self.examen_db.obtener_examen_por_id(id)
+
+                if examen:
+                    self.input_Asignature.setText("{0}".format(examen[1]))
+                    
+                    self.input_Exam.setText("{0}".format(examen[2]))
+
+                    self.input_Present.setText("{0}".format(examen[3])) 
+                    
+                    self.input_category.setText("{0}".format(examen[4])) 
+                    
+                    self.input_detail.setText("{0}".format(examen[5]))
+
+                    self.btn_update.setText("Guardar")
+                    self.estado = 1
+
+        else:  
+            #Obtengo el id de la selccion
+            if self.exam_list.selectedItems() and self.input_Exam.text() != "":
+
+                #campo = (self.input_Exam.text())
+
+                examen = self.exam_list.currentItem().text()
+                id = examen.split(" --- ")[0]
+                examen = self.examen_db.obtener_examen_por_id(id)
+
+                id_para_consulta = int(examen[0])
+
+                #datos = (id_para_consulta,campo)
+                try:
+                    self.examen_db.update_examen((self.input_Asignature.text(), 
+                                                self.input_Exam.text(),
+                                                self.input_Present.text(), 
+                                                self.input_category.text(), 
+                                                self.input_detail.text(),
+                                                id_para_consulta))
+                    QMessageBox.information(self, "Información", "examen actulizada correctamente")
+                    self.exam_list.clear()
+                    self.conjunto_de_examens()
+                    self.vaciar_inputs()
+
+                except Error as e:
+                    QMessageBox.information(
+                        self, "Error", "Error al momento de actualizar la examen")
+            else:
+                QMessageBox.information(
+                    self, "Advertencia", "Debes ingresar toda la informacion")
+            self.btn_update.setText("Modificar")
+            self.estado = 0
+
+    def vaciar_inputs(self):
+        """
+        Me deja vacio los inputs sin los valores que le cargue.
+        """
+        self.input_Asignature.setText("") 
+        self.input_Exam.setText("")
+        self.input_Present.setText("")         
+        self.input_category.setText("")             
+        self.input_detail.setText("")
+
+    def eliminar_examen(self):
+        """ ELimina el examen seleccionado"""
+        if self.exam_list.selectedItems():
+            examen = self.exam_list.currentItem().text()
+            id = examen.split(" --- ")[0]
+
+            examen = self.examen_db.obtener_examen_por_id(id)
+            #AQUI NO RETORNA NADA 
+            
+
+            yes = QMessageBox.Yes
+
+            if examen:
+                question_text = ("¿Está seguro de eliminar el examen {0}?".format(examen[1]))
+                question = QMessageBox.question(self, "Advertencia", question_text,
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if question == QMessageBox.Yes:
+                    self.examen_db.eliminar_examen_por_id(examen[2])
+                    QMessageBox.information(self, "Información", "¡examen eliminado satisfactoriamente!")
+                    self.exam_list.clear()
+                    self.conjunto_de_examen()
+
+            else:
+                QMessageBox.information(self, "Advertencia", "Ha ocurrido un error. Reintente nuevamente")
+
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar un examen a eliminar")
+
+    def mostrar_informacion_messagebox(self):
+        """ Muestra todos los datos de un registro
+            en un messagebox
+        """
+        if self.exam_list.selectedItems():
+            examen = self.exam_list.currentItem().text()
+            id = examen.split(" --- ")[0]
+
+            examen = self.examen_db.obtener_examen_por_id(id)
+
+            if examen:
+                question_text = ("""
+                                Asignatura:{0}\n
+                                Examen:{1}\n
+                                Fecha:{2}\n
+                                Categoria:{3}\n
+                                Detalles:{4}\n
+                                """.format(examen[0],examen[1],examen[2],examen[3],examen[4],examen[5]))
+                question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+
+    
 
         
 class examenBd:
@@ -200,10 +313,10 @@ class examenBd:
                                 );
                                 """
         self.examen_query = """
-                                CREATE TABLE IF NOT EXISTS examen(
-                                    Idexamen INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                                    IdAsignature INTEGER,
-                                    examen TEXT NOT NULL,
+                                CREATE TABLE IF NOT EXISTS Examen(
+                                    IdExamen INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                    IdAsignatura INTEGER,
+                                    Examen TEXT NOT NULL,
                                     Fecha TEXT NOT NULL,
                                     IdCategoria INTEGER,
                                     Detalles TEXT,
@@ -264,13 +377,13 @@ class examenBd:
     def add_examen(self, examen):
         """
         Realiza una inserción a la tabla de examen.
-        :param examen: Una estructura que contiene
+        :para examen: Una estructura que contiene
                          los datos del examen.
         :return:
         """
         sqlInsert = """                 
-                    INSERT INTO examen(
-                        IdAsignature, examen, Fecha,
+                    INSERT INTO Examen(
+                        IdAsignatura, Examen, Fecha,
                         IdCategoria, Detalles)
                      VALUES(?, ?, ?, ?, ?)
                     """
@@ -284,9 +397,29 @@ class examenBd:
         except Error as e:
             print(e)
 
+    def update_examen(self, id):
+        """
+        Query que se encarga de la actualizacion de datos
+        """
+        sqlUpdate = """
+                    UPDATE Examen 
+                    SET IdAsignatura = ?,
+                        Examen = ? ,
+                        Fecha = ?,
+                        IdCategoria = ?,
+                        Detalles = ?                  
+                    WHERE Examen = ?;
+                    """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlUpdate,id)
+            self.connection.commit()
+        except Error as e:
+            print(e) 
+
     def obtener_todos_los_examenes(self):
         """ Obtiene todas las tuplas de la tabla Examen """
-        sqlQuery = "SELECT * FROM examen ORDER BY ROWID ASC;"
+        sqlQuery = "SELECT * FROM Examen ORDER BY ROWID ASC;"
 
         try:
             cursor = self.connection.cursor()
@@ -300,7 +433,7 @@ class examenBd:
 
 
     def obtener_solo_la_ultima_examen(self):
-        sqlQuery ="SELECT * FROM examen ORDER BY Idexamen DESC LIMIT 1;"
+        sqlQuery ="SELECT * FROM Examen ORDER BY Idexamen DESC LIMIT 1;"
 
         try:
             cursor = self.connection.cursor()
@@ -311,6 +444,43 @@ class examenBd:
             print(e)
 
         return None
+    
+    def obtener_examen_por_id(self,id):
+        """
+        Busca una asignatura mediante el valor del id.
+        param: id: El valor de la asignatura.
+        :return
+        """
+        sqlQuery = " SELECT * FROM Examen WHERE Examen = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            examen = cursor.execute(sqlQuery, (id,)).fetchone()
+
+            return examen
+        except Error as e:
+            print(e)
+
+        return None
+
+
+    def eliminar_examen_por_id(self, id):
+        """
+        Elimina un examen mediante el valor del id Examen.
+        """
+        sqlQuery = " DELETE FROM Examen WHERE Examen = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlQuery, (id,))
+            self.connection.commit()
+
+            return True
+        except Error as e:
+            print(e)
+
+        return None
+
 
  
 
