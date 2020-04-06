@@ -30,6 +30,7 @@ class Main(QWidget):
         self.show()
 
     def UI(self):
+        self.estado = 0
         self.main_design()
         self.layouts()
         self.set_subject_list()
@@ -134,16 +135,20 @@ class Main(QWidget):
         #self.new_subject = AddSubject(self.subject_db)
         #self.close()
         if (self.input_name_subject.text() or self.input_day.text() or
-            self.input_professor.text() or self.input_classroom.text() != ""):
+            self.input_professor.text() or self.input_classroom.text() != "" ):
             subject = (self.input_name_subject.text(), self.input_check_in.text(),
                        self.input_check_out.text(), self.input_day.text(),
                        self.input_professor.text(), self.input_classroom.text())
             try:
                 self.subject_db.add_subject(subject)
-                QMessageBox.information(
-                    self, "Información", "Asignatura agregada correctamente")
-                self.close()
-                self.main = Main()
+                if (self.input_check_out.time() > self.input_check_in.time()):
+                    QMessageBox.information(
+                        self, "Información", "Asignatura agregada correctamente")
+                    self.close()
+                    self.main = Main()       
+                else:
+                     QMessageBox.information(
+                        self, "Información", "Hora de salida mayor o igual a la de entrada")                                
             except Error as e:
                 QMessageBox.information(
                     self, "Error", "Error al momento de agregar la asignatura")
@@ -153,6 +158,14 @@ class Main(QWidget):
 
     def set_subject_list(self):
         """ Obtiene las tuplas de asignaturas y las muestra en la lista """
+        # Remover los widgets que se encuentran en self.left_layout
+        for x in reversed(range(self.list_layout.count())):
+            # Remover los widgets uno por uno
+            widget = self.list_layout.takeAt(x)
+
+            if widget is not None:
+                widget.deleteLater()
+                
         subjects = self.subject_db.get_all_subjects()
 
         if subjects:
@@ -223,32 +236,72 @@ class Main(QWidget):
                 question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
     
     def update_subject(self):
-        if self.subject_list.selectedItems():
-            subject = self.subject_list.currentItem().text()
-            id = subject.split(" --- ")[0]
-                
-            subject = self.subject_db.get_subjects_by_id(id)
-            
-            yes = QMessageBox.Yes
+        if self.estado == 0:
+            if self.subject_list.selectedItems():
+                subject = self.subject_list.currentItem().text()
+                id = subject.split(" --- ")[0]
+                    
+                subject = self.subject_db.get_subjects_by_id(id)
 
-            if subject:
-                self.input_name_subject.setText("{0}".format(subject[1]))
-                
-                self.input_check_in.setTime("{0}".format(subject[2]))
+                if subject:
+                    self.input_name_subject.setText("{0}".format(subject[1]))
+                    self.input_day.setText("{0}".format(subject[4]))
+                    self.input_professor.setText("{0}".format(subject[5]))
+                    self.input_classroom.setText("{0}".format(subject[6]))
+                    self.btn_update.setText("Guardar")
+                    self.btn_new.setVisible(False)
+                    self.btn_information.setVisible(False)
+                    self.btn_delete.setVisible(False)
+                    
+                    self.estado = 1
 
-                self.input_check_out.setTime("{0}".format(subject[3])) 
-                
-                self.input_day.setText("{0}".format(subject[4])) 
-                
-                self.input_professor.setText("{0}".format(subject[5]))
-                
-                self.input_classroom.setText("{0}".format(subject[6]))                  
-                self.subject_db.update_subject_by_id(subject[1])
-                QMessageBox.information(self, "Información", "asignatura eliminada satisfactoriamente!")
-                self.subject_list.clear()
-                self.set_subject_list()
-                
+        else:  
+            #Obtengo el id de la selccion
+            if self.subject_list.selectedItems() and self.input_name_subject.text() != "":
+
+                #campo = (self.input_Tarea.text())
+
+                subject = self.subject_list.currentItem().text()
+                id = subject.split(" --- ")[0]
+                subject = self.subject_db.get_subjects_by_id(id)
+
+                id_query = int(subject[0])
+
+                #datos = (id_para_consulta,campo)
+                try:
+                    self.subject_db.update_subject_by_id((self.input_name_subject.text(), 
+                                                self.input_check_in.time(),
+                                                self.input_check_out.time(), 
+                                                self.input_day.text(), 
+                                                self.input_professor.text(),
+                                                self.input_classroom.text(),
+                                                id_query))
+                    QMessageBox.information(self, "Información", "Datos de asignatura actualizadoss")
+                    self.subject_list.clear()
+                    self.set_subject_list()
+                    self.vaciar_inputs()
+
+                except Error as e:
+                    QMessageBox.information(
+                        self, "Error", "Error al momento de actualizar la asignatura")
+            else:
+                QMessageBox.information(
+                    self, "Advertencia", "Debes ingresar toda la informacion")
+            self.btn_update.setText("Modificar")
+            self.btn_new.setVisible(True)
+            self.btn_information.setVisible(True)
+            self.btn_delete.setVisible(True)
+            self.estado = 0           
             
+    def vaciar_inputs(self):
+        """
+        Deja vacio los inputs sin los valores que le cargue.
+        """
+        self.input_name_subject.setText("") 
+        self.input_day.setText("")
+        self.input_professor.setText("")         
+        self.input_classroom.setText("")             
+        
             
 class SubjectDB:
     " Base de datos para las asignaturas "
@@ -261,12 +314,13 @@ class SubjectDB:
 	                                (
 	                                idSubject INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	                                nameSubject TEXT NOT NULL,
-	                                chechkIn TIMESTAMP,
-	                                chechkOut TIMESTAMP,
+	                                checkIn TIMESTAMP,
+	                                checkOut TIMESTAMP,
 	                                day TEXT,
 	                                professor TEXT,
 	                                classroom TEXT,
 	                                CONSTRAINT UQ_nameSubject UNIQUE (nameSubject)
+                                    CONSTRAINT CK_CheckOut_greater_than_checkIn CHECK (checkOut > checkIn)
 	                                )
                               """
         self.create_table(self.connection, self.subject_query)
@@ -306,7 +360,7 @@ class SubjectDB:
         """
         sqlInsert = """
                     INSERT INTO subject(
-                        nameSubject, chechkIn, chechkOut,
+                        nameSubject, checkIn, checkOut,
 	                    day, professor, classroom)
                      VALUES(?, ?, ?, ?, ?, ?)
                     """
@@ -385,24 +439,27 @@ class SubjectDB:
 
         return None
     
-    def update_subject_by_id(self, id):
+    def update_subject_by_id(self, subject):
         """
         Actualiza una asignatura mediante el valor del id.
         param: id: El valor de la asignatura.
         :return: True si la asginatura se actualizó. None en caso contrario.
         """
-        sqlQuery = """UPDATE subject set 
-                        nameSubject = ?, chechkIn = ?, chechkOut = ?,
-	                    day = ?, professor = ?, classroom = ?
-                        WHERE nameSubject = ?;
+        sqlUpdate= """
+                        UPDATE subject
+                        SET nameSubject = ?, 
+                          checkIn = ?, 
+                          checkOut = ?,
+	                      day = ?, 
+                          professor = ?, 
+                          classroom = ?
+                        WHERE idSubject = ?;
                    """
 
         try:
             cursor = self.connection.cursor()
-            cursor.execute(sqlQuery, (id,))
+            cursor.execute(sqlUpdate, subject)
             self.connection.commit()
-
-            return True
         except Error as e:
             print(e)
 
