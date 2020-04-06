@@ -6,7 +6,8 @@
 # Fecha: En el año 1600
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QFont, QIcon, QRegion, QFontMetrics, QPixmap
 import sys
 import os
 import sqlite3
@@ -41,7 +42,8 @@ class Exam_interfaz(QWidget):
         """
         Funcion que contine los widgets de la ventana
         """
-        self.tittle = QLabel("E X A M E N ")
+        self.tittle = QLabel("E X A M E N ", alignment=Qt.AlignCenter)
+        self.label_ver_examen = QLabel("  ")
         self.tittle.setFixedHeight(70)
         self.tittle.setFixedWidth(457)
         self.tittle.setStyleSheet("""color: white;
@@ -49,8 +51,7 @@ class Exam_interfaz(QWidget):
                                     background-image: url(Resource/Banner.jpg);
                                     """)
         
-        self.label_ver_examen = QLabel("  ")
-        self.tittle.adjustSize()
+
 
         #Lista
         self.exam_list = QListWidget()
@@ -133,7 +134,31 @@ class Exam_interfaz(QWidget):
 
         self.setLayout(self.Exam_interfaz_layout)
 
-  
+
+    def insert_exam(self):
+            """ Inserta los valores del fomulario a la tabla de examen"""
+            if(self.input_Asignature.text() or self.input_Exam.text() or self.input_Present.text()
+                or self.input_category.text() or self.input_detail.text() != ""):
+
+                examen = (   self.input_Asignature.text(), self.input_Exam.text(),
+                            self.input_Present.text(), self.input_category.text(), 
+                            self.input_detail.text()
+                            )
+                try:
+                    self.examen_db.add_examen(examen)
+                    QMessageBox.information(
+                        self, "Información", "examen agregado correctamente")
+                    #self.close()
+                    #self.main = Main()
+                except Error as e:
+                    QMessageBox.information(
+                        self, "Error", "Error al momento de agregar la examen")
+            else:
+                QMessageBox.information(
+                    self, "Advertencia", "Debes ingresar toda la informacion")
+
+
+        
     def conjunto_de_examen(self):
         """ 
         Obtiene todos los registros en la tabla examen
@@ -144,7 +169,7 @@ class Exam_interfaz(QWidget):
         if examenes:
             for examen in examenes:
                 self.exam_list.addItem(
-                    """ • {0} }} {1} }} {2} """.format(examen[1], examen[2], examen[3]))
+                    """{0} --- {1} Fecha:{2} """.format(examen[2], examen[1], examen[3]))
 
     def ultimo_conjunto_de_Examen(self):
         """
@@ -155,32 +180,11 @@ class Exam_interfaz(QWidget):
         if examenes:
             for examen in examenes:
                 self.exam_list.addItem(
-                    """ • {0} }} {1} }} {2} """.format(examen[1], examen[2], examen[3]))
+                   """{0} --- {1} Fecha:{2} """.format(examen[2], examen[1], examen[3]))
 
 
 
-    def insert_exam(self):
-        """ Inserta los valores del fomulario a la tabla de examen"""
-        if(self.input_Asignature.text() or self.input_Exam.text() or self.input_Present.text()
-            or self.input_category.text() or self.input_detail.text() != ""):
-
-            examen = (   self.input_Asignature.text(), self.input_Exam.text(),
-                        self.input_Present.text(), self.input_category.text(), 
-                        self.input_detail.text()
-                        )
-            try:
-                self.examen_db.add_examen(examen)
-                QMessageBox.information(
-                    self, "Información", "examen agregado correctamente")
-                #self.close()
-                #self.main = Main()
-            except Error as e:
-                QMessageBox.information(
-                    self, "Error", "Error al momento de agregar la examen")
-        else:
-            QMessageBox.information(
-                self, "Advertencia", "Debes ingresar toda la informacion")
-    
+   
     def modificar_examen(self):
 
         if self.estado == 0:
@@ -193,16 +197,14 @@ class Exam_interfaz(QWidget):
 
                 if examen:
                     self.input_Asignature.setText("{0}".format(examen[1]))
-                    
                     self.input_Exam.setText("{0}".format(examen[2]))
-
                     self.input_Present.setText("{0}".format(examen[3])) 
-                    
                     self.input_category.setText("{0}".format(examen[4])) 
-                    
                     self.input_detail.setText("{0}".format(examen[5]))
-
                     self.btn_update.setText("Guardar")
+                    self.btn_new.setVisible(False)
+                    self.btn_Mostrar.setVisible(False)
+                    self.btn_delete.setVisible(False)
                     self.estado = 1
 
         else:  
@@ -227,7 +229,7 @@ class Exam_interfaz(QWidget):
                                                 id_para_consulta))
                     QMessageBox.information(self, "Información", "examen actulizada correctamente")
                     self.exam_list.clear()
-                    self.conjunto_de_examens()
+                    self.conjunto_de_examen()
                     self.vaciar_inputs()
 
                 except Error as e:
@@ -237,6 +239,9 @@ class Exam_interfaz(QWidget):
                 QMessageBox.information(
                     self, "Advertencia", "Debes ingresar toda la informacion")
             self.btn_update.setText("Modificar")
+            self.btn_new.setVisible(True)
+            self.btn_Mostrar.setVisible(True)
+            self.btn_delete.setVisible(True)
             self.estado = 0
 
     def vaciar_inputs(self):
@@ -290,11 +295,12 @@ class Exam_interfaz(QWidget):
 
             if examen:
                 question_text = ("""
-                                Asignatura:{0}\n
-                                Examen:{1}\n
-                                Fecha:{2}\n
-                                Categoria:{3}\n
-                                Detalles:{4}\n
+                                Numero De Examen:{0}\n
+                                Asignatura:{1}\n
+                                Examen:{2}\n
+                                Fecha:{3}\n
+                                Categoria:{4}\n
+                                Detalles:{5}\n
                                 """.format(examen[0],examen[1],examen[2],examen[3],examen[4],examen[5]))
                 question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
 
@@ -408,7 +414,7 @@ class examenBd:
                         Fecha = ?,
                         IdCategoria = ?,
                         Detalles = ?                  
-                    WHERE Examen = ?;
+                    WHERE IdExamen = ?;
                     """
         try:
             cursor = self.connection.cursor()
