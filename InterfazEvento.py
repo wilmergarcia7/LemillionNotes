@@ -13,10 +13,6 @@ import os
 import sqlite3
 from sqlite3 import Error
 from PIL import Image
-#from PyQt5.QtWidgets import QVBoxLayout
-
-#from ..utils import gui_test, get_icon_pixmap
-#from . import WidgetBase
 
 class Interfaz_Evento(QWidget):
     """
@@ -31,6 +27,7 @@ class Interfaz_Evento(QWidget):
         self.show()
 
     def UI(self):
+        self.estado = 0
         self.main_design()
         self.layouts()
         self.conjunto_de_eventos()
@@ -41,7 +38,7 @@ class Interfaz_Evento(QWidget):
         """
         self.tittle = QLabel("E V E N T O", alignment=Qt.AlignCenter)
         self.tittle.setFixedHeight(70)
-        self.tittle.setFixedWidth(457)
+        self.tittle.setFixedWidth(417)
         self.tittle.setStyleSheet("""color: white;
                                     font-size: 30px;
                                     background-image: url(Resource/Banner.jpg);
@@ -70,7 +67,11 @@ class Interfaz_Evento(QWidget):
         self.btn_new.clicked.connect(self.insert)
         self.btn_new.clicked.connect(self.ultimo_conjunto_eventos)
         self.btn_update = QPushButton("Modificar")
+        self.btn_update.clicked.connect(self.modificar_evento)
         self.btn_delete = QPushButton("Eliminar")
+        self.btn_delete.clicked.connect(self.eliminar_evento)
+        self.btn_view = QPushButton("Informacion")
+        self.btn_view.clicked.connect(self.mostrar_informacion)
 
         #Widgets
         self.label_name_subject = QLabel("Asignatura: ")
@@ -83,7 +84,7 @@ class Interfaz_Evento(QWidget):
         
         self.label_name_date = QLabel("Fecha: ")
         self.input_name_date = QLineEdit()
-        self.input_name_date.setPlaceholderText("Agregar fecha")
+        self.input_name_date.setPlaceholderText("day/mounth/year")
         
         self.label_name_location = QLabel("Ubicacion: ")
         self.input_name_location = QLineEdit()
@@ -98,13 +99,14 @@ class Interfaz_Evento(QWidget):
         Layouts que compone el menu principal
         """
         self.main_layout = QVBoxLayout()
-        self.top_layout = QVBoxLayout()
+        self.top_layout = QHBoxLayout()
         self.button_layout = QFormLayout()
         self.boton_layout = QHBoxLayout()
         self.down_layout = QVBoxLayout()
 
         # Agregar los widgets al top_layout
         self.top_layout.addWidget(self.tittle)
+        self.top_layout.addWidget(self.btn_retorno)
         self.down_layout.addWidget(self.label_ver_eventos)
         self.down_layout.addWidget(self.evento_list)
 
@@ -115,7 +117,7 @@ class Interfaz_Evento(QWidget):
         self.main_layout.addLayout(self.down_layout)
 
         #button
-        self.button_layout.addRow(self.btn_retorno)
+        #self.button_layout.addRow(self.btn_retorno)
         self.button_layout.addRow(self.label_name_subject, self.input_name_subject)
         self.button_layout.addRow(self.label_name_event, self.input_name_event)
         self.button_layout.addRow(self.label_name_date, self.input_name_date)
@@ -127,6 +129,7 @@ class Interfaz_Evento(QWidget):
         self.boton_layout.addWidget(self.btn_new)
         self.boton_layout.addWidget(self.btn_update)
         self.boton_layout.addWidget(self.btn_delete)
+        self.boton_layout.addWidget(self.btn_view)
 
         self.setLayout(self.main_layout)
 
@@ -180,6 +183,116 @@ class Interfaz_Evento(QWidget):
                 self, "Advertencia", "Debes ingresar todos los datos")
 
 
+    def modificar_evento(self):
+        if self.estado == 0:
+            if self.evento_list.selectedItems():
+                evento = self.evento_list.currentItem().text()
+                id = evento.split("---")[0]
+
+                evento = self.evento_db.evento_por_id(id)
+
+                if evento:
+                    self.input_name_subject.setText("{0}".format(evento[1]))
+                    self.input_name_event.setText("{0}".format(evento[2]))
+                    self.input_name_date.setText("{0}".format(evento[3]))
+                    self.input_name_location.setText("{0}".format(evento[4]))
+                    self.input_name_detail.setText("{0}".format(evento[5]))
+                    self.btn_update.setText("Guardar")
+                    self.estado = 1
+
+        else:
+            #Obteniendo el id seleccionado
+            if self.evento_list.selectedItems() and self.input_name_event.text() != "":
+                evento = self.evento_list.currentItem().text()
+                id = evento.split(" --- ")[0]
+                evento = self.evento_db.evento_por_id(id)
+
+                id_consulta = int(evento[0])
+
+                try:
+                    self.evento_db.update_evento((self.input_name_subject.text(),
+                                                  self.input_name_event.text(),
+                                                  self.input_name_date.text(),
+                                                  self.input_name_location.text(),
+                                                  self.input_name_detail.text(),
+                                                  id_consulta))
+                    QMessageBox.information(self, "Información", "Evento actulizado correctamente")
+                    self.evento_list.clear()
+                    self.conjunto_de_eventos()
+                    self.vaciar_inputs()
+
+                except Error as e:
+                    QMessageBox.information(
+                        self, "Error", "Error al momento de actualizar el Evento")
+            else:
+                QMessageBox.information(
+                    self, "Advertencia", "Debes ingresar toda la informacion")
+            self.btn_update.setText("Modificar")
+            self.estado = 0      
+
+    def vaciar_inputs(self):
+        """
+        Deja vacio los inputs de los valores cargados anteriormente
+        """
+        self.input_name_subject.setText("") 
+        self.input_name_event.setText("")
+        self.input_name_date.setText("")         
+        self.input_name_location.setText("")             
+        self.input_name_detail.setText("")    
+
+
+    def eliminar_evento(self):
+        """ 
+        ELimina el evento seleccionado
+        """
+        if self.evento_list.selectedItems():
+            evento = self.evento_list.currentItem().text()
+            id = evento.split(" --- ")[0]
+
+            evento = self.evento_db.evento_por_id(id)
+
+            yes = QMessageBox.Yes
+
+            if evento:
+                question_text = ("¿Esta seguro de eliminar el evento {0}?".format(evento[2]))
+                question = QMessageBox.question(self, "Advertencia", question_text,
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if question == QMessageBox.Yes:
+                    self.evento_db.eliminar_evento(evento[2])
+                    QMessageBox.information(self, "Información", "Evento eliminado satisfactoriamente")
+                    self.evento_list.clear()
+                    self.conjunto_de_eventos()
+
+            else:
+                QMessageBox.information(self, "Advertencia", "Ha ocurrido un error. Reintente nuevamente")
+
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar un Evento a eliminar")  
+
+
+    def mostrar_informacion(self):
+        """
+        Muestra la informacion de un evento
+        """
+        if self.evento_list.selectedItems():
+            evento = self.evento_list.currentItem().text()
+            id = evento.split(" --- ")[0]
+
+            evento = self.evento_db.evento_por_id(id)
+
+            if evento:
+                question_text = ("""
+                                NoEvento:{0}\n
+                                Asignatura:{1}\n
+                                Evento:{2}\n
+                                Fecha:{3}\n
+                                Ubicacion:{4}\n
+                                Detalle:{5}\n
+                                """.format(evento[0],evento[1],evento[2],evento[3],evento[4],evento[5]))
+                question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+
+
 class EventoBd:
     """
     Base de datos para el evento
@@ -198,7 +311,7 @@ class EventoBd:
                                   """
        
         self.evento_query = """
-                                CREATE TABLE IF NOT EXISTS Evento(
+                                CREATE TABLE IF NOT EXISTS EventoT(
                                     IdEvento INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                                     IdAsignatura INTEGER,
                                     Evento TEXT NOT NULL,
@@ -244,14 +357,14 @@ class EventoBd:
 
     
 
-    def add_Evento(self, Evento):
+    def add_Evento(self, EventoT):
         """
         Insertar en la tabla evento
         :param Evento: Una estructura que contiene los datos del evento
         :return:
         """
         sqlInsert = """
-                    INSERT INTO Evento(
+                    INSERT INTO EventoT(
                         IdAsignatura, Evento, Fecha, Ubicacion,
                         Detalle)
                     VALUES(?, ?, ?, ?, ?)
@@ -259,9 +372,29 @@ class EventoBd:
 
         try:
             cursor = self.connection.cursor()
-            cursor.execute(sqlInsert, Evento)
+            cursor.execute(sqlInsert, EventoT)
             # Indicarle al motor de base de datos
             # que los cambios sean persistentes
+            self.connection.commit()
+        except Error as e:
+            print(e)
+
+    def update_evento(self, EventoT):
+        """
+        Modificar los datos
+        """
+        sqlUpdate = """
+                    UPDATE EventoT
+                    SET IdAsignatura = ?,
+                        Evento = ?,
+                        Fecha = ?,
+                        Ubicacion = ?,
+                        Detalle = ?,
+                    WHERE IdEvento = ?;
+                    """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlUpdate,EventoT)
             self.connection.commit()
         except Error as e:
             print(e)
@@ -270,7 +403,7 @@ class EventoBd:
         """
         Obtiene todos los datos de eventos
         """
-        sqlQuery = "SELECT * FROM Evento ORDER BY ROWID ASC;"
+        sqlQuery = "SELECT * FROM EventoT ORDER BY ROWID ASC;"
 
         try:
             cursor = self.connection.cursor()
@@ -283,7 +416,7 @@ class EventoBd:
         return None
     
     def obtener_ultimo_evento(self):
-        sqlQuery ="SELECT * FROM Evento ORDER BY IdEvento DESC LIMIT 1;" 
+        sqlQuery ="SELECT * FROM EventoT ORDER BY IdEvento DESC LIMIT 1;" 
 
         try:
             cursor = self.connection.cursor()
@@ -295,6 +428,42 @@ class EventoBd:
 
         return None
     
+
+    def evento_por_id(self, id_Evento):
+        """ 
+        Busca un evento mediante el valor del id
+        """
+        sqlQuery = " SELECT * FROM EventoT WHERE Evento = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            evento = cursor.execute(sqlQuery, (id_Evento,)).fetchone()
+
+            return evento
+
+        except Error as e:
+            print(e)
+
+        return None
+
+
+    def eliminar_evento(self, id_Evento):
+        """
+        Elimina un evento por el valor del id
+        """
+        sqlQuery = " DELETE FROM EventoT WHERE Evento = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlQuery, (id_Evento,))
+            self.connection.commit()
+
+            return True
+        except Error as e:
+            print(e)
+
+        return None
+
 
 
 def main():
