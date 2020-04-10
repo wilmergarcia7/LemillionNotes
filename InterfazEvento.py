@@ -184,6 +184,7 @@ class Interfaz_Evento(QWidget):
 
 
     def modificar_evento(self):
+
         if self.estado == 0:
             if self.evento_list.selectedItems():
                 evento = self.evento_list.currentItem().text()
@@ -198,6 +199,9 @@ class Interfaz_Evento(QWidget):
                     self.input_name_location.setText("{0}".format(evento[4]))
                     self.input_name_detail.setText("{0}".format(evento[5]))
                     self.btn_update.setText("Guardar")
+                    self.btn_new.setVisible(False)
+                    self.btn_view.setVisible(False)
+                    self.btn_delete.setVisible(False)
                     self.estado = 1
 
         else:
@@ -228,6 +232,9 @@ class Interfaz_Evento(QWidget):
                 QMessageBox.information(
                     self, "Advertencia", "Debes ingresar toda la informacion")
             self.btn_update.setText("Modificar")
+            self.btn_new.setVisible(True)
+            self.btn_view.setVisible(True)
+            self.btn_delete.setVisible(True)
             self.estado = 0      
 
     def vaciar_inputs(self):
