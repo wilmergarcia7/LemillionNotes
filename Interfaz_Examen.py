@@ -11,6 +11,7 @@ from PyQt5.QtGui import QPixmap, QFont, QIcon, QRegion, QFontMetrics, QPixmap
 import sys
 import os
 import sqlite3
+import calendar
 from sqlite3 import Error
 
 #clase de examen
@@ -141,8 +142,6 @@ class Exam_interfaz(QWidget):
                     self.examen_db.add_examen(examen)
                     QMessageBox.information(
                     self, "Información", "Examen agregado correctamente")
-                    self.close()
-                    self.main = Exam_interfaz()
                 except Error as e:
                     QMessageBox.information(
                         self, "Error", "Error al momento de agregar la examen")
