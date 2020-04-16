@@ -13,6 +13,7 @@ import os
 import time
 import sqlite3
 from sqlite3 import Error
+from ctypes import Union
 #from PyQt5.QtWidgets import QVBoxLayout
 
 #from ..utils import gui_test, get_icon_pixmap
@@ -63,26 +64,31 @@ class Main(QWidget):
         # Center Layout Widgets
         self.label_name_subject = QLabel("Nombre Asignatura: ")
         self.input_name_subject = QLineEdit()
-        self.input_name_subject.setPlaceholderText("Asesinar II")
+        self.input_name_subject.setPlaceholderText("Programación I")
         self.label_check_in= QLabel("Hora de entrada: ")
         self.input_check_in = QTimeEdit()     
         self.label_check_out= QLabel("Hora de salida: ")
         self.input_check_out = QTimeEdit()
         self.label_day = QLabel("Día: ")
-        self.input_day = QLineEdit()
-        self.input_day.setPlaceholderText("Lunes, martes, miércoles, jueves, viernes, sábado, domingo")
+        self.cbdays = QComboBox()
+        self.cbdays.addItem('Lunes')
+        self.cbdays.addItem('Lunes, Martes')
+        self.cbdays.addItem('Lunes, Martes, Miércoles')
+        self.cbdays.addItem('Lunes, Martes, Miércoles, Jueves')
+        self.cbdays.addItem('Lunes, Martes, Miércoles, Jueves, Viernes')
+        self.cbdays.addItem('Sábado')
+        self.cbdays.addItem('Sábado, Domingo')
         self.label_professor = QLabel("Catedrático: ")
         self.input_professor = QLineEdit()
         self.input_professor.setPlaceholderText("Wade Winston Wilson")
         self.label_classroom = QLabel("Aula: ")
         self.input_classroom = QLineEdit()
-        self.input_classroom.setPlaceholderText("125") 
-        
+        self.input_classroom.setPlaceholderText("A-101") 
+    
     def layouts(self):
         """ Layouts que compone el menu principal"""
         # Layouts
-        # Layout principal el que contiene a left_main_layout
-        # y right_main_layout
+        # Layout principal 
         self.main_layout = QVBoxLayout()
         
          # Layout de titulo
@@ -113,7 +119,7 @@ class Main(QWidget):
         self.content_layout.addRow(self.label_name_subject , self.input_name_subject)
         self.content_layout.addRow(self.label_check_in , self.input_check_in )
         self.content_layout.addRow(self.label_check_out , self.input_check_out )
-        self.content_layout.addRow(self.label_day , self.input_day )
+        self.content_layout.addRow(self.label_day , self.cbdays )
         self.content_layout.addRow(self.label_professor , self.input_professor )
         self.content_layout.addRow(self.label_classroom , self.input_classroom )
         
@@ -132,12 +138,10 @@ class Main(QWidget):
 
     def add_subject(self):
         """ Inicia el formulario de ingreso de datos del empleado """
-        #self.new_subject = AddSubject(self.subject_db)
-        #self.close()
         if (self.input_name_subject.text() or self.input_day.text() or
             self.input_professor.text() or self.input_classroom.text() != "" ):
             subject = (self.input_name_subject.text(), self.input_check_in.text(),
-                       self.input_check_out.text(), self.input_day.text(),
+                       self.input_check_out.text(), str(self.cbdays.currentText()),
                        self.input_professor.text(), self.input_classroom.text())
             try:
                 self.subject_db.add_subject(subject)
@@ -228,7 +232,7 @@ class Main(QWidget):
 
                 if subject:
                     self.input_name_subject.setText("{0}".format(subject[1]))
-                    self.input_day.setText("{0}".format(subject[4]))
+                    #self.input_day.setText("{0}".format(subject[4]))
                     self.input_professor.setText("{0}".format(subject[5]))
                     self.input_classroom.setText("{0}".format(subject[6]))
                     self.btn_update.setText("Guardar")
@@ -243,9 +247,6 @@ class Main(QWidget):
         else:  
             #Obtengo el id de la selccion
             if self.subject_list.selectedItems() and self.input_name_subject.text() != "":
-
-                #campo = (self.input_Tarea.text())
-
                 subject = self.subject_list.currentItem().text()
                 id = subject.split(" --- ")[0]
                 subject = self.subject_db.get_subjects_by_id(id)
@@ -255,7 +256,7 @@ class Main(QWidget):
                                                 self.input_name_subject.text(), 
                                                 self.input_check_in.text(),
                                                 self.input_check_out.text(), 
-                                                self.input_day.text(), 
+                                                str(self.cbdays.currentText()), 
                                                 self.input_professor.text(),
                                                 self.input_classroom.text(),
                                                 id
@@ -282,7 +283,7 @@ class Main(QWidget):
         Deja vacio los inputs sin los valores que le cargue.
         """
         self.input_name_subject.setText("") 
-        self.input_day.setText("")
+        #self.input_day.setText("")
         self.input_professor.setText("")         
         self.input_classroom.setText("")             
         
