@@ -48,10 +48,10 @@ class Main(QWidget):
                                     """)
         
         self.subject_list = QListWidget()
+        self.subject_list.itemActivated.connect(self.set_subject_list)
          
         self.btn_new = QPushButton("Agregar")
         self.btn_new.clicked.connect(self.add_subject)
-        self.btn_new.clicked.connect(self.show_list)    
         self.btn_update = QPushButton("Modificar")
         self.btn_update.clicked.connect(self.update_subject)
         self.btn_delete = QPushButton("Eliminar")
@@ -163,20 +163,8 @@ class Main(QWidget):
         if subjects:
             for subject in subjects:
                 self.subject_list.addItem(
-                    "{0} --- Aula: {1} --- Hora entrada: {2}".format(subject[1], subject[6], subject[2]))
-                
-    def show_list(self):
-        """
-        Ultimo dato de los registros
-        """
-        subjects = self.subject_db.get_only_last_subject()
-
-        if subjects:
-            for subject in subjects:
-                self.subject_list.addItem(
-                    "{0} --- Aula: {1} --- Hora entrada: {2}".format(subject[1], subject[6], subject[2]))
+                    "{0} --- Asignatura: {1} --- Aula: {2} --- Hora entrada: {3}".format(subject[0], subject[1], subject[6], subject[2]))
     
-   
     def delete_subject(self):
         """ Elimina la asignatura que se encuentra seleccionada """
         # Obtener el valor de la asignatura seleccionada
@@ -195,7 +183,7 @@ class Main(QWidget):
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
                 if question == QMessageBox.Yes:
-                    self.subject_db.delete_subject_by_id(subject[1])
+                    self.subject_db.delete_subject_by_id(subject[0])
                     QMessageBox.information(self, "Información", "asignatura eliminada satisfactoriamente!")
                     self.subject_list.clear()
                     self.set_subject_list()
@@ -218,14 +206,17 @@ class Main(QWidget):
 
             if subject:
                 question_text = ("""
-                                Asignatura: {0}\n
-                                Hora de Entrada: {1}\n
-                                Hora de Salida: {2}\n
-                                Días: {3}\n
-                                Catedrático: {4}\n
-                                Aula: {5}\n
-                                """.format(subject[1],subject[2],subject[3],subject[4],subject[5],subject[6]))
+                                Número de Asignatura:{0} \n 
+                                Asignatura: {1}\n
+                                Hora de Entrada: {2}\n
+                                Hora de Salida: {3}\n
+                                Días: {4}\n
+                                Catedrático: {5}\n
+                                Aula: {6}\n
+                                """.format(subject[0], subject[1],subject[2],subject[3],subject[4],subject[5],subject[6]))
                 question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar la asignatura que desea a mostrar")
     
     def update_subject(self):
         if self.state == 0:
@@ -246,6 +237,8 @@ class Main(QWidget):
                     self.btn_delete.setVisible(False)
                     
                     self.state = 1
+            else:
+                QMessageBox.information(self, "Advertencia", "Favor seleccionar la asignatura que desea a actualizar")
 
         else:  
             #Obtengo el id de la selccion
@@ -256,18 +249,17 @@ class Main(QWidget):
                 subject = self.subject_list.currentItem().text()
                 id = subject.split(" --- ")[0]
                 subject = self.subject_db.get_subjects_by_id(id)
-
-                id_query = int(subject[0])
-
-                #datos = (id_para_consulta,campo)
+                
                 try:
-                    self.subject_db.update_subject_by_id((self.input_name_subject.text(), 
-                                                self.input_check_in.time(),
-                                                self.input_check_out.time(), 
+                    self.subject_db.update_subject_by_id((
+                                                self.input_name_subject.text(), 
+                                                self.input_check_in.text(),
+                                                self.input_check_out.text(), 
                                                 self.input_day.text(), 
                                                 self.input_professor.text(),
                                                 self.input_classroom.text(),
-                                                id_query))
+                                                id
+                                                ))
                     QMessageBox.information(self, "Información", "Datos de asignatura actualizadoss")
                     self.subject_list.clear()
                     self.set_subject_list()
@@ -386,7 +378,7 @@ class SubjectDB:
         param: id: El valor de la asignatura.
         :return: Un arreglo con los atributos de la asignatura.
         """
-        sqlQuery = " SELECT * FROM subject WHERE nameSubject = ?"
+        sqlQuery = " SELECT * FROM subject WHERE idSubject = ?"
 
         try:
             cursor = self.connection.cursor()
@@ -398,19 +390,6 @@ class SubjectDB:
             print(e)
 
         return None
-    
-    def get_only_last_subject(self):
-        sqlQuery ="SELECT * FROM subject ORDER BY nameSubject DESC LIMIT 1;"
-
-        try:
-            cursor = self.connection.cursor()
-            subjects = cursor.execute(sqlQuery).fetchall()
-            self.connection.commit()
-            return subjects
-        except Error as e:
-            print(e)
-
-        return None
 
     def delete_subject_by_id(self, id):
         """
@@ -418,7 +397,7 @@ class SubjectDB:
         param: id: El valor de la asignatura.
         :return: True si la asginatura se eliminó. None en caso contrario.
         """
-        sqlQuery = "DELETE FROM subject WHERE nameSubject = ?;"
+        sqlQuery = "DELETE FROM subject WHERE idSubject = ?;"
 
         try:
             cursor = self.connection.cursor()
@@ -431,7 +410,7 @@ class SubjectDB:
 
         return None
     
-    def update_subject_by_id(self, subject):
+    def update_subject_by_id(self, id):
         """
         Actualiza una asignatura mediante el valor del id.
         param: id: El valor de la asignatura.
@@ -450,7 +429,7 @@ class SubjectDB:
 
         try:
             cursor = self.connection.cursor()
-            cursor.execute(sqlUpdate, subject)
+            cursor.execute(sqlUpdate, id)
             self.connection.commit()
         except Error as e:
             print(e)
