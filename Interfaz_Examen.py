@@ -12,12 +12,8 @@ import sys
 import os
 import sqlite3
 from sqlite3 import Error
-from PIL import Image
 
-#from PyQt5.QtWidgets import QVBoxLayout
-
-#from ..utils import gui_test, get_icon_pixmap
-#from . import WidgetBase
+#clase de examen
 class Exam_interfaz(QWidget):
     """
     Ventana principal de examen.
@@ -30,18 +26,19 @@ class Exam_interfaz(QWidget):
         self.UI()
         self.show()
 
-        
 
     def UI(self):
         self.estado = 0
         self.Exam_interfaz_design()
         self.layouts_exam()
-        self.conjunto_de_examen()
+        self.set_exam_list()
 
+    #Interfaz de ventana botones margenes e imagenes
     def Exam_interfaz_design(self):
         """
-        Funcion que contine los widgets de la ventana
+        Funcion que contine los widgets de la ventana botones imagenes
         """
+        #Titulo de la ventana examen
         self.tittle = QLabel("E X A M E N ", alignment=Qt.AlignCenter)
         self.label_ver_examen = QLabel("  ")
         self.tittle.setFixedHeight(70)
@@ -51,27 +48,27 @@ class Exam_interfaz(QWidget):
                                     background-image: url(Resource/Banner.jpg);
                                     """)
         
-
-
-        #Lista
+        #Lista de la ventana de examn
         self.exam_list = QListWidget()
+        self.exam_list.itemActivated.connect(self.set_exam_list)
         self.exam_list.setStyleSheet("""
                                         background-image: url(Resource/List.jpg);
                                         font-size: 20px;
                                         """)
 
+        #boton de retorno 
         self.btn_retorno = QPushButton("←")
+        self.btn_retorno.setFixedHeight(70)
+        self.btn_retorno.setFixedWidth(40)   
         self.btn_retorno.setStyleSheet("""
                                         color:white;
                                          border-style: none;
                                          background-image: url(Resource/BoronRetornoInterfaz.jpg)
-                                         """)    
-        self.btn_retorno.setFixedHeight(70)
-        self.btn_retorno.setFixedWidth(40)                         
-
+                                         """)   
+         
+        #botones de la interfaz
         self.btn_new = QPushButton("Agregar")
         self.btn_new.clicked.connect(self.insert_exam)
-        self.btn_new.clicked.connect(self.ultimo_conjunto_de_Examen)
         self.btn_update = QPushButton("Modificar")
         self.btn_update.clicked.connect(self.modificar_examen)
         self.btn_delete = QPushButton("Eliminar")
@@ -79,27 +76,24 @@ class Exam_interfaz(QWidget):
         self.btn_Mostrar = QPushButton("Informacion")
         self.btn_Mostrar.clicked.connect(self.mostrar_informacion_messagebox)
         
-        # Center Layout Widgets
+        #label de la interfax  y txt
         self.label_Asignature = QLabel("Asignatura: ")
         self.input_Asignature = QLineEdit()
         self.input_Asignature.setPlaceholderText("Añadir una asignatura")
-
         self.label_Exam = QLabel("Examen: ")
         self.input_Exam  = QLineEdit()
         self.input_Exam.setPlaceholderText("Añadir un examen")
-
         self.label_Present = QLabel("Presentacion: ")
         self.input_Present = QLineEdit()
         self.input_Present.setPlaceholderText("dia/mes/año")
-
         self.label_category = QLabel("Categoria: ")
         self.input_category = QLineEdit()
-        self.input_category.setPlaceholderText("Añadir una categoria")
-
+        self.input_category.setPlaceholderText("Escrito, Virtual, Documento, Ensayo, Practico")
         self.label_detail = QLabel("Detalle : ")
         self.input_detail = QLineEdit()
         self.input_detail.setPlaceholderText("Agregar un detalle")
         
+    #Distribucion del formulario botones  contenedores label
     def layouts_exam(self):
         """ Layouts que compone la ventana de examen"""
         self.Exam_interfaz_layout = QVBoxLayout()
@@ -134,12 +128,11 @@ class Exam_interfaz(QWidget):
 
         self.setLayout(self.Exam_interfaz_layout)
 
-
+    #Funcion de insetar examen
     def insert_exam(self):
             """ Inserta los valores del fomulario a la tabla de examen"""
             if(self.input_Asignature.text() or self.input_Exam.text() or self.input_Present.text()
                 or self.input_category.text() or self.input_detail.text() != ""):
-
                 examen = (   self.input_Asignature.text(), self.input_Exam.text(),
                             self.input_Present.text(), self.input_category.text(), 
                             self.input_detail.text()
@@ -147,9 +140,9 @@ class Exam_interfaz(QWidget):
                 try:
                     self.examen_db.add_examen(examen)
                     QMessageBox.information(
-                        self, "Información", "examen agregado correctamente")
-                    #self.close()
-                    #self.main = Main()
+                    self, "Información", "Examen agregado correctamente")
+                    self.close()
+                    self.main = Exam_interfaz()
                 except Error as e:
                     QMessageBox.information(
                         self, "Error", "Error al momento de agregar la examen")
@@ -158,8 +151,8 @@ class Exam_interfaz(QWidget):
                     self, "Advertencia", "Debes ingresar toda la informacion")
 
 
-        
-    def conjunto_de_examen(self):
+     #Funcion  para obtener los examenes de la lista   
+    def set_exam_list(self):
         """ 
         Obtiene todos los registros en la tabla examen
         """
@@ -170,29 +163,16 @@ class Exam_interfaz(QWidget):
             for examen in examenes:
                 self.exam_list.addItem(
                     """{0} --- {1} Fecha:{2} """.format(examen[2], examen[1], examen[3]))
-
-    def ultimo_conjunto_de_Examen(self):
-        """
-        Ultimo dato de los registros
-        """
-        examenes = self.examen_db.obtener_solo_la_ultima_examen()
-
-        if examenes:
-            for examen in examenes:
-                self.exam_list.addItem(
-                   """{0} --- {1} Fecha:{2} """.format(examen[2], examen[1], examen[3]))
-
-
-
    
+   #Funcion para modificar el examen 
     def modificar_examen(self):
-
+        """Obtiene el id seleccionado del examen y mediante este modifica el campo o campos con el id seleccionado
+        """
         if self.estado == 0:
             if self.exam_list.selectedItems():
                 examen = self.exam_list.currentItem().text()
                 id = examen.split(" --- ")[0]
 
-                #no retorna nada  
                 examen = self.examen_db.obtener_examen_por_id(id)
 
                 if examen:
@@ -206,7 +186,8 @@ class Exam_interfaz(QWidget):
                     self.btn_Mostrar.setVisible(False)
                     self.btn_delete.setVisible(False)
                     self.estado = 1
-
+            else:
+                QMessageBox.information(self, "Advertencia", "Favor seleccionar el examen que desea a actualizar")
         else:  
             #Obtengo el id de la selccion
             if self.exam_list.selectedItems() and self.input_Exam.text() != "":
@@ -217,7 +198,7 @@ class Exam_interfaz(QWidget):
                 id = examen.split(" --- ")[0]
                 examen = self.examen_db.obtener_examen_por_id(id)
 
-                id_para_consulta = int(examen[0])
+               # id_para_consulta = int(examen[0])
 
                 #datos = (id_para_consulta,campo)
                 try:
@@ -226,10 +207,10 @@ class Exam_interfaz(QWidget):
                                                 self.input_Present.text(), 
                                                 self.input_category.text(), 
                                                 self.input_detail.text(),
-                                                id_para_consulta))
-                    QMessageBox.information(self, "Información", "examen actulizada correctamente")
+                                                id))
+                    QMessageBox.information(self, "Información", "Examen actulizada correctamente")
                     self.exam_list.clear()
-                    self.conjunto_de_examen()
+                    self.set_exam_list()
                     self.vaciar_inputs()
 
                 except Error as e:
@@ -244,6 +225,7 @@ class Exam_interfaz(QWidget):
             self.btn_delete.setVisible(True)
             self.estado = 0
 
+    #Funcion para limpiar los text
     def vaciar_inputs(self):
         """
         Me deja vacio los inputs sin los valores que le cargue.
@@ -254,15 +236,14 @@ class Exam_interfaz(QWidget):
         self.input_category.setText("")             
         self.input_detail.setText("")
 
+    #Funcion pata  eliminar examen
     def eliminar_examen(self):
-        """ ELimina el examen seleccionado"""
+        """ ELimina el examen seleccionado mediante el id """
         if self.exam_list.selectedItems():
             examen = self.exam_list.currentItem().text()
             id = examen.split(" --- ")[0]
 
             examen = self.examen_db.obtener_examen_por_id(id)
-            #AQUI NO RETORNA NADA 
-            
 
             yes = QMessageBox.Yes
 
@@ -272,10 +253,10 @@ class Exam_interfaz(QWidget):
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
                 if question == QMessageBox.Yes:
-                    self.examen_db.eliminar_examen_por_id(examen[2])
-                    QMessageBox.information(self, "Información", "¡examen eliminado satisfactoriamente!")
+                    self.examen_db.eliminar_examen_por_id(examen[0])
+                    QMessageBox.information(self, "Información", "¡Examen eliminado satisfactoriamente!")
                     self.exam_list.clear()
-                    self.conjunto_de_examen()
+                    self.set_exam_list()
 
             else:
                 QMessageBox.information(self, "Advertencia", "Ha ocurrido un error. Reintente nuevamente")
@@ -283,6 +264,7 @@ class Exam_interfaz(QWidget):
         else:
             QMessageBox.information(self, "Advertencia", "Favor seleccionar un examen a eliminar")
 
+    #Funcion para mostrar la informacion del examen un messagebox
     def mostrar_informacion_messagebox(self):
         """ Muestra todos los datos de un registro
             en un messagebox
@@ -304,9 +286,11 @@ class Exam_interfaz(QWidget):
                                 """.format(examen[0],examen[1],examen[2],examen[3],examen[4],examen[5]))
                 question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
 
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar el examen que desea a mostrar")
     
 
-        
+#Clase examen 
 class examenBd:
     """ Base de datos para examen"""
     def __init__(self,db_filename):
@@ -334,7 +318,7 @@ class examenBd:
         self.insert_categoria_examen()
         self.create_table(self.connection ,self.examen_query)
     
-    
+    #Funcion para la base de datos
     def create_connection(self, db_filename):
         """ Crear una conexión a la base de datos SQLite """
         conn = None
@@ -348,6 +332,7 @@ class examenBd:
         finally:
             return conn
 
+    #Funcion que crea tablas
     def create_table(self, conn, query):
         """
         Crea una tabla basado en los valores de query.
@@ -361,6 +346,7 @@ class examenBd:
         except Error as e:
             print(e)
 
+    #Funcion para insertar en categoria
     def insert_categoria_examen(self):
         """ """
         sqlInsert = """
@@ -379,7 +365,7 @@ class examenBd:
         except Error as e:
             print(e)
 
-
+    #Funcion para agregar un examen
     def add_examen(self, examen):
         """
         Realiza una inserción a la tabla de examen.
@@ -403,6 +389,7 @@ class examenBd:
         except Error as e:
             print(e)
 
+    #Funcion para actualizar un examen por su id
     def update_examen(self, id):
         """
         Query que se encarga de la actualizacion de datos
@@ -423,6 +410,7 @@ class examenBd:
         except Error as e:
             print(e) 
 
+    #Funcion para obtener las tuplas de examenes
     def obtener_todos_los_examenes(self):
         """ Obtiene todas las tuplas de la tabla Examen """
         sqlQuery = "SELECT * FROM Examen ORDER BY ROWID ASC;"
@@ -437,27 +425,14 @@ class examenBd:
 
         return None
 
-
-    def obtener_solo_la_ultima_examen(self):
-        sqlQuery ="SELECT * FROM Examen ORDER BY Idexamen DESC LIMIT 1;"
-
-        try:
-            cursor = self.connection.cursor()
-            examenes = cursor.execute(sqlQuery).fetchall()
-            self.connection.commit()
-            return examenes
-        except Error as e:
-            print(e)
-
-        return None
-    
+    #Funcion para buscar un examen por su id unico
     def obtener_examen_por_id(self,id):
         """
         Busca una asignatura mediante el valor del id.
         param: id: El valor de la asignatura.
         :return
         """
-        sqlQuery = " SELECT * FROM Examen WHERE Examen = ?;"
+        sqlQuery = " SELECT * FROM Examen WHERE IdExamen = ?;"
 
         try:
             cursor = self.connection.cursor()
@@ -469,12 +444,12 @@ class examenBd:
 
         return None
 
-
+    #Funcion para eliminar un examen por  su id
     def eliminar_examen_por_id(self, id):
         """
         Elimina un examen mediante el valor del id Examen.
         """
-        sqlQuery = " DELETE FROM Examen WHERE Examen = ?;"
+        sqlQuery = " DELETE FROM Examen WHERE IdExamen = ?;"
 
         try:
             cursor = self.connection.cursor()
