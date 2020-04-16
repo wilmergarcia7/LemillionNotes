@@ -30,7 +30,7 @@ class Main(QWidget):
         self.show()
 
     def UI(self):
-        self.estado = 0
+        self.state = 0
         self.main_design()
         self.layouts()
         self.set_subject_list()
@@ -157,15 +157,7 @@ class Main(QWidget):
                 self, "Advertencia", "Debes ingresar toda la información")
 
     def set_subject_list(self):
-        """ Obtiene las tuplas de asignaturas y las muestra en la lista """
-        # Remover los widgets que se encuentran en self.left_layout
-        for x in reversed(range(self.list_layout.count())):
-            # Remover los widgets uno por uno
-            widget = self.list_layout.takeAt(x)
-
-            if widget is not None:
-                widget.deleteLater()
-                
+        """ Obtiene las tuplas de asignaturas y las muestra en la lista """                
         subjects = self.subject_db.get_all_subjects()
 
         if subjects:
@@ -236,7 +228,7 @@ class Main(QWidget):
                 question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
     
     def update_subject(self):
-        if self.estado == 0:
+        if self.state == 0:
             if self.subject_list.selectedItems():
                 subject = self.subject_list.currentItem().text()
                 id = subject.split(" --- ")[0]
@@ -253,7 +245,7 @@ class Main(QWidget):
                     self.btn_information.setVisible(False)
                     self.btn_delete.setVisible(False)
                     
-                    self.estado = 1
+                    self.state = 1
 
         else:  
             #Obtengo el id de la selccion
@@ -291,7 +283,7 @@ class Main(QWidget):
             self.btn_new.setVisible(True)
             self.btn_information.setVisible(True)
             self.btn_delete.setVisible(True)
-            self.estado = 0           
+            self.state = 0           
             
     def vaciar_inputs(self):
         """

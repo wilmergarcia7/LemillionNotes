@@ -143,7 +143,7 @@ class Interfaz_Evento(QWidget):
         if eventos:
             for evento in eventos:
                 self.evento_list.addItem(
-                    """ • {0} }} {1} }} {2} """.format(evento[1], evento[2], evento[3]))
+                    """{0} --- {1} --- {2} """.format(evento[1], evento[2], evento[3]))
 
     def ultimo_conjunto_eventos(self):
         """
@@ -155,7 +155,7 @@ class Interfaz_Evento(QWidget):
         if eventos:
             for evento in eventos:
                 self.evento_list.addItem(
-                    """ • {0} }} {1} }} {2} """.format(evento[1], evento[2], evento[3]))
+                    """{0} --- {1} --- {2} """.format(evento[1], evento[2], evento[3]))
 
     def insert(self):
         """
@@ -188,7 +188,7 @@ class Interfaz_Evento(QWidget):
         if self.estado == 0:
             if self.evento_list.selectedItems():
                 evento = self.evento_list.currentItem().text()
-                id = evento.split("---")[0]
+                id = evento.split(" --- ")[1]
 
                 evento = self.evento_db.evento_por_id(id)
 
@@ -208,7 +208,7 @@ class Interfaz_Evento(QWidget):
             #Obteniendo el id seleccionado
             if self.evento_list.selectedItems() and self.input_name_event.text() != "":
                 evento = self.evento_list.currentItem().text()
-                id = evento.split(" --- ")[0]
+                id = evento.split(" --- ")[1]
                 evento = self.evento_db.evento_por_id(id)
 
                 id_consulta = int(evento[0])
@@ -254,7 +254,7 @@ class Interfaz_Evento(QWidget):
         """
         if self.evento_list.selectedItems():
             evento = self.evento_list.currentItem().text()
-            id = evento.split(" --- ")[0]
+            id = evento.split(" --- ")[1]
 
             evento = self.evento_db.evento_por_id(id)
 
@@ -284,7 +284,7 @@ class Interfaz_Evento(QWidget):
         """
         if self.evento_list.selectedItems():
             evento = self.evento_list.currentItem().text()
-            id = evento.split(" --- ")[0]
+            id = evento.split(" --- ")[1]
 
             evento = self.evento_db.evento_por_id(id)
 
@@ -396,12 +396,12 @@ class EventoBd:
                         Evento = ?,
                         Fecha = ?,
                         Ubicacion = ?,
-                        Detalle = ?,
+                        Detalle = ?
                     WHERE IdEvento = ?;
                     """
         try:
             cursor = self.connection.cursor()
-            cursor.execute(sqlUpdate,EventoT)
+            cursor.execute(sqlUpdate, EventoT)
             self.connection.commit()
         except Error as e:
             print(e)
