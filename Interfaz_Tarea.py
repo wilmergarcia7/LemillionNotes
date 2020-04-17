@@ -22,7 +22,7 @@ class Interfaz_Tarea(QWidget):
         super().__init__()
         self.tarea_db = TareaBd("lemilion.bd")
         self.setWindowTitle("Tarea")
-        self.setGeometry(450, 450, 457,609)
+        self.setGeometry(450, 80, 457,609)
         self.UI()
         self.show()
 
@@ -165,6 +165,7 @@ class Interfaz_Tarea(QWidget):
                 self.tarea_db.add_Tarea(tarea)
                 QMessageBox.information(
                     self, "Información", "Tarea agregado correctamente")
+                self.vaciar_inputs()
                 #self.close()
                 #self.main = Main()
             except Error as e:
@@ -181,7 +182,7 @@ class Interfaz_Tarea(QWidget):
                 tarea = self.homework_List.currentItem().text()
                 id = tarea.split(" --- ")[0]
                     
-                tarea = self.tarea_db.obtener_tarea_por_id(id)
+                tarea = self.tarea_db.tarea_por_nombre(id)
 
                 if tarea:
                     self.input_Asignatura.setText("{0}".format(tarea[1]))
@@ -194,6 +195,10 @@ class Interfaz_Tarea(QWidget):
                     
                     self.input_detalle.setText("{0}".format(tarea[5]))
                     self.btn_update.setText("Guardar")
+
+                    self.btn_agregar.setVisible(False)
+                    self.btn_delete.setVisible(False)
+                    self.btn_Mostrar.setVisible(False)
                     self.estado = 1
 
         else:  
@@ -204,7 +209,7 @@ class Interfaz_Tarea(QWidget):
 
                 tarea = self.homework_List.currentItem().text()
                 id = tarea.split(" --- ")[0]
-                tarea = self.tarea_db.obtener_tarea_por_id(id)
+                tarea = self.tarea_db.tarea_por_nombre(id)
 
                 id_para_consulta = int(tarea[0])
 
@@ -228,6 +233,9 @@ class Interfaz_Tarea(QWidget):
                 QMessageBox.information(
                     self, "Advertencia", "Debes ingresar toda la informacion")
             self.btn_update.setText("Modificar")
+            self.btn_agregar.setVisible(True)
+            self.btn_delete.setVisible(True)
+            self.btn_Mostrar.setVisible(True)
             self.estado = 0
 
     def vaciar_inputs(self):
@@ -246,7 +254,7 @@ class Interfaz_Tarea(QWidget):
             tarea = self.homework_List.currentItem().text()
             id = tarea.split(" --- ")[0]
 
-            tarea = self.tarea_db.obtener_tarea_por_id(id)
+            tarea = self.tarea_db.tarea_por_nombre(id)
 
             yes = QMessageBox.Yes
 
@@ -275,7 +283,7 @@ class Interfaz_Tarea(QWidget):
             tarea = self.homework_List.currentItem().text()
             id = tarea.split(" --- ")[0]
 
-            tarea = self.tarea_db.obtener_tarea_por_id(id)
+            tarea = self.tarea_db.encontrar_tarea_por_nombre(id)
 
             if tarea:
                 question_text = ("""
@@ -305,9 +313,6 @@ class Interfaz_Tarea(QWidget):
                                 """.format(tarea[1],tarea[2],tarea[3],tarea[4],tarea[5]))
                 question = QMessageBox.about(self,"Tarea","{0}".format(question_text))
 
-    
-
-
 
 class TareaBd:
     """ Base de datos para Tarea"""
@@ -328,8 +333,7 @@ class TareaBd:
                                     Fecha TEXT NOT NULL,
                                     IdCategoria INTEGER,
                                     Detalles TEXT,
-                                    FOREIGN KEY (IdCategoria)
-                                        REFERENCES CategoriaTarea (IdCategoria)
+                                    FOREIGN KEY (IdCategoria) REFERENCES CategoriaTarea (IdCategoria)
                                 );
                             """
         self.create_table(self.connection,self.categoria_query)
@@ -454,7 +458,25 @@ class TareaBd:
 
         return None
 
-    def obtener_tarea_por_id(self,id_Tarea):
+    def encontrar_tarea_por_nombre(self,id_Tarea):
+        """ Busca una tarea mediante el valor del id"""
+        sqlQuery = """
+                        SELECT A.IdTArea, IdAsignatura, A.Tarea, A.Fecha,B.NombreCategoria, A.Detalles
+                        FROM Tarea A INNER JOIN CategoriaTarea B 
+                        ON A.IdCategoria = B.IdCategoria WHERE A.Tarea = ?;
+                  """
+
+        try:
+            cursor = self.connection.cursor()
+            tarea = cursor.execute(sqlQuery, (id_Tarea,)).fetchone()
+
+            return tarea
+        except Error as e:
+            print(e)
+
+        return None
+
+    def tarea_por_nombre(self,id_Tarea):
         """ Busca una tarea mediante el valor del id"""
         sqlQuery = " SELECT * FROM Tarea WHERE Tarea = ?;"
 
