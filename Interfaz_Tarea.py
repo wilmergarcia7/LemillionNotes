@@ -279,14 +279,31 @@ class Interfaz_Tarea(QWidget):
 
             if tarea:
                 question_text = ("""
-                                NumeroDeTarea:{0}\n
-                                Asignatura:{1}\n
-                                Tarea:{2}\n
-                                Fecha:{3}\n
-                                Categoria:{4}\n
-                                Detalles:{5}\n
-                                """.format(tarea[0],tarea[1],tarea[2],tarea[3],tarea[4],tarea[5]))
-                question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+                                <b>
+                                    <br>
+                                    <font size="5">
+                                        <FONT COLOR='#000000'>{0}</FONT>
+                                    </b>
+                                </br>
+
+                                <br>
+                                    <font size="4">
+                                        <FONT COLOR='#c7a500'>{1}</FONT>
+                                    </br>
+                                    
+                                <font size="3">
+                                    <br>
+                                        {2}
+                                    </br>
+                                    <br>
+                                        {3}
+                                    </br>
+                                    <br>
+                                        {4}
+                                    </br> 
+                                </font>
+                                """.format(tarea[1],tarea[2],tarea[3],tarea[4],tarea[5]))
+                question = QMessageBox.about(self,"Tarea","{0}".format(question_text))
 
     
 
