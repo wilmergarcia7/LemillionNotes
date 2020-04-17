@@ -25,7 +25,7 @@ class Main(QWidget):
     def __init__(self):
         super().__init__()
         self.subject_db = SubjectDB("SubjectDB.db")
-        self.setWindowTitle("Asignatura")
+        self.setWindowTitle("Lemilion")
         self.setGeometry(450, 450, 457, 609)
         self.UI()
         self.show()
@@ -42,12 +42,21 @@ class Main(QWidget):
         """
         self.title = QLabel("A s i g n a t u r a", alignment=Qt.AlignCenter)
         self.title.setFixedHeight(70)
-        self.title.setFixedWidth(457)
+        self.title.setFixedWidth(400)
         self.title.setStyleSheet("""color: white;
                                     font-size: 30px;
                                     background-image: url(Resource/Banner.jpg);
                                     """)
-        
+        self.title.adjustSize()
+        self.btn_retorno = QPushButton("←")
+        self.btn_retorno.setStyleSheet("""
+                                        color:white;
+                                         border-style: none;
+                                         background-image: url(Resource/BoronRetornoInterfaz.jpg)
+                                         """)
+        self.btn_retorno.setFixedHeight(70)
+        self.btn_retorno.setFixedWidth(30)
+      
         self.subject_list = QListWidget()
         self.subject_list.itemActivated.connect(self.set_subject_list)
          
@@ -92,7 +101,7 @@ class Main(QWidget):
         self.main_layout = QVBoxLayout()
         
          # Layout de titulo
-        self.title_layout = QVBoxLayout()
+        self.title_layout = QHBoxLayout()
         
         # Layout contenerdor de la información sobre la asignatura
         self.content_layout = QFormLayout()
@@ -105,8 +114,8 @@ class Main(QWidget):
 
         # Agregar los layouts hijos al layout padre
         # Layout fondo
-        self.main_layout.addLayout(self.title_layout, 10)
-        self.main_layout.addLayout(self.content_layout, 40)
+        self.main_layout.addLayout(self.title_layout, 15)
+        self.main_layout.addLayout(self.content_layout, 35)
         self.main_layout.addLayout(self.button_layout, 5)
         self.main_layout.addLayout(self.list_layout, 40)
         
@@ -114,6 +123,7 @@ class Main(QWidget):
         
         # Titulo 
         self.title_layout.addWidget(self.title)
+        self.title_layout.addWidget(self.btn_retorno)
         
         # funciones de escribir datos lado izquierdo central
         self.content_layout.addRow(self.label_name_subject , self.input_name_subject)
@@ -210,13 +220,31 @@ class Main(QWidget):
 
             if subject:
                 question_text = ("""
-                                No.:{0} \n 
-                                {1}\n
-                                {2}\n
-                                {3}\n
-                                {4}\n
-                                {5}\n
-                                {6}\n
+                                <b>
+                                   <br>
+                                   <font size="5">
+                                        <FONT COLOR='#000000'>{0}</FONT> 
+                                  </br>
+                                  <br>
+                                    <font size="4">
+                                        <FONT COLOR='#c7a500'>{1}</FONT>  
+                                <font size="3">
+                                    <br>
+                                        {2}
+                                    </br>
+                                    <br>
+                                        {3}
+                                    </br>
+                                    <br>
+                                        {4}
+                                    </br> 
+                                    <br>
+                                        {5}
+                                    </br>
+                                    <br>
+                                        {6}
+                                    </br> 
+                                </font>
                                 """.format(subject[0], subject[1],subject[2],subject[3],subject[4],subject[5],subject[6]))
                 question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
         else:
