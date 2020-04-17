@@ -1291,7 +1291,7 @@ class Interfaz_Examen(QWidget):
         self.input_Present.setPlaceholderText("dia/mes/año")
         self.label_category = QLabel("Categoria: ")
         self.input_category = QLineEdit()
-        self.input_category.setPlaceholderText("1: Escrito, 2: Virtual, 3: Practico")
+        self.input_category.setPlaceholderText("1: Escrito, 2: Practico, 3: Virtual")
         self.label_detail = QLabel("Detalle : ")
         self.input_detail = QLineEdit()
         self.input_detail.setPlaceholderText("Agregar un detalle")
@@ -1581,8 +1581,8 @@ class examenBd:
         sqlInsert = """
                     INSERT INTO Categoriaexamen (NombreCategoria)
                                             VALUES	('Escrito'),
-                                                ('Practico'),
-                                                ('Virtual');
+                                                    ('Practico'),
+                                                    ('Virtual');
                     """
         try:
             cursor = self.connection.cursor()
