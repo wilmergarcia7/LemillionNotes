@@ -1723,7 +1723,7 @@ class Interfaz_Evento(QWidget):
         super().__init__()
         self.evento_db = EventoBd("lemilion.bd")
         self.setWindowTitle("Evento")
-        self.setGeometry(450, 450, 457,609)
+        self.setGeometry(450, 80, 457,609)
         self.UI()
         self.show()
 
