@@ -1104,7 +1104,7 @@ class TareaBd:
         """
         sqlInsert = """                 
                     INSERT INTO Tarea(
-                        IdAsignatura, Tarea, Fecha,
+                        idSubject, Tarea, Fecha,
                         IdCategoria, Detalles)
                      VALUES(?, ?, ?, ?, ?)
                     """
@@ -1124,7 +1124,7 @@ class TareaBd:
         """
         sqlUpdate = """
                     UPDATE Tarea 
-                    SET IdAsignatura = ?,
+                    SET idSubject = ?,
                         Tarea = ? ,
                         Fecha = ?,
                         IdCategoria = ?,
@@ -1169,9 +1169,12 @@ class TareaBd:
     def encontrar_tarea_por_nombre(self,id_Tarea):
         """ Busca una tarea mediante el valor del id"""
         sqlQuery = """
-                        SELECT A.IdTArea, IdAsignatura, A.Tarea, A.Fecha,B.NombreCategoria, A.Detalles
+                        SELECT A.IdTArea, c.nameSubject, A.Tarea, A.Fecha,B.NombreCategoria, A.Detalles
                         FROM Tarea A INNER JOIN CategoriaTarea B 
-                        ON A.IdCategoria = B.IdCategoria WHERE A.Tarea = ?;
+                        ON A.IdCategoria = B.IdCategoria 
+                        INNER JOIN subject C
+                        ON A.idSubject = c.idSubject                        
+                        WHERE A.Tarea = ?;
                   """
 
         try:
