@@ -203,6 +203,8 @@ class Interfaz_Evento(QWidget):
                     self.btn_view.setVisible(False)
                     self.btn_delete.setVisible(False)
                     self.estado = 1
+            else:
+                QMessageBox.information(self, "Advertencia", "Favor seleccionar el evento que desea a actualizar")
 
         else:
             #Obteniendo el id seleccionado
@@ -317,6 +319,11 @@ class Interfaz_Evento(QWidget):
                 question = QMessageBox.about(self,"evento","{0}".format(question_text))
 
 
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar el evento que desea a mostrar")
+    
+
+
 class EventoBd:
     """
     Base de datos para el evento
@@ -337,13 +344,13 @@ class EventoBd:
         self.evento_query = """
                                 CREATE TABLE IF NOT EXISTS EventoT(
                                     IdEvento INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                                    IdAsignatura INTEGER,
+                                    idSubject INTEGER,
                                     Evento TEXT NOT NULL,
                                     Fecha TEXT NOT NULL,
                                     Ubicacion TEXT NOT NULL,
                                     Detalle TEXT,
-                                    FOREIGN KEY (IdAsignatura)
-                                        REFERENCES AsignaturaEvento (IdAsignatura)
+                                    FOREIGN KEY (IdAsignatura) REFERENCES AsignaturaEvento (IdAsignatura)
+                                    FOREIGN KEY (idSubject) REFERENCES subject (idSubject)
                                 );
                             """
         self.create_table(self.connection,self.asignatura_evento)
