@@ -6,11 +6,13 @@
 
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QFont, QIcon, QRegion
+from PyQt5.QtGui import QPixmap, QFont, QIcon, QRegion, QFontMetrics, QPixmap
 import sys
 import os
 import platform
 import sqlite3
+import time
+from ctypes import Union
 from getpass import getuser
 from sqlite3 import Error
 from PIL import Image
@@ -67,6 +69,8 @@ class Main(QWidget):
         self.label_Asignatura.setFixedHeight(20)
         self.label_Asignatura.setFixedWidth(80)
         self.label_Asignatura.move(290,370)
+
+        self.btn_Asignatura.clicked.connect(self.add_Asignatura)
         
         ###
         #A G E N D A
@@ -253,7 +257,7 @@ class AgendaMenu(QWidget):
 
 
 ###############################################################
-# - - - - - - - -  W I D G E T  T A R E A - - - - - - - - - - -
+# - - - - - - - -  W I D G E T  A S I G N A T U R A - - - - - - - - - - -
 
 class InterfazAsignatura(QWidget):
     """
@@ -261,112 +265,449 @@ class InterfazAsignatura(QWidget):
     """
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Asignatura")
+        self.subject_db = SubjectDB("lemilion.bd")
+        self.setWindowTitle("Lemilion")
         self.setGeometry(450, 450, 457, 609)
         self.UI()
         self.show()
 
     def UI(self):
+        self.state = 0
         self.main_design()
         self.layouts()
+        self.set_subject_list()
 
     def main_design(self):
         """
         Menú que añade una asignatura y ve sus detalles
         """
-        self.title = QLabel("Agregar Asignatura")
-        self.image = QLabel()        
-        self.image.setPixmap(QPixmap("Resource/Asignatura_Banner.jpg"))
-        
-        self.asignature_list = QListWidget()     
+        self.title = QLabel("A s i g n a t u r a", alignment=Qt.AlignCenter)
+        self.title.setFixedHeight(70)
+        self.title.setFixedWidth(400)
+        self.title.setStyleSheet("""color: white;
+                                    font-size: 30px;
+                                    background-image: url(Resource/Banner.jpg);
+                                    """)
+        self.title.adjustSize()
+        self.btn_retorno = QPushButton("←")
+        self.btn_retorno.setStyleSheet("""
+                                        color:white;
+                                         border-style: none;
+                                         background-image: url(Resource/BoronRetornoInterfaz.jpg)
+                                         """)
+        self.btn_retorno.setFixedHeight(70)
+        self.btn_retorno.setFixedWidth(30)
+      
+        self.subject_list = QListWidget()
+        self.subject_list.itemActivated.connect(self.set_subject_list)
+         
         self.btn_new = QPushButton("Agregar")
-      # self.btn_new.clicked.connect(self.add_subject)
+        self.btn_new.clicked.connect(self.add_subject)
         self.btn_update = QPushButton("Modificar")
+        self.btn_update.clicked.connect(self.update_subject)
         self.btn_delete = QPushButton("Eliminar")
+        self.btn_delete.clicked.connect(self.delete_subject)
+        self.btn_information = QPushButton("Información")
+        self.btn_information.clicked.connect(self.show_information_messagebox)
+        
         
         # Center Layout Widgets
         self.label_name_subject = QLabel("Nombre Asignatura: ")
         self.input_name_subject = QLineEdit()
-        self.input_name_subject.setPlaceholderText("Cálculo")
-        self.label_time_in= QLabel("Hora de entrada: ")
-        self.input_time_in = QLineEdit()
-        self.input_time_in.setPlaceholderText("12:00 p.m.")
-        self.label_time_out= QLabel("Hora de salida: ")
-        self.input_time_out = QLineEdit()
-        self.input_time_out.setPlaceholderText("1:00 p.m.")
+        self.input_name_subject.setPlaceholderText("Programación I")
+        self.label_check_in= QLabel("Hora de entrada: ")
+        self.input_check_in = QTimeEdit()     
+        self.label_check_out= QLabel("Hora de salida: ")
+        self.input_check_out = QTimeEdit()
         self.label_day = QLabel("Día: ")
-        self.input_day = QLineEdit()
-        self.input_day.setPlaceholderText("Lunes")
+        self.cbdays = QComboBox()
+        self.cbdays.addItem('Lunes')
+        self.cbdays.addItem('Lunes, Martes')
+        self.cbdays.addItem('Lunes, Martes, Miércoles')
+        self.cbdays.addItem('Lunes, Martes, Miércoles, Jueves')
+        self.cbdays.addItem('Lunes, Martes, Miércoles, Jueves, Viernes')
+        self.cbdays.addItem('Sábado')
+        self.cbdays.addItem('Sábado, Domingo')
         self.label_professor = QLabel("Catedrático: ")
         self.input_professor = QLineEdit()
-        self.input_professor.setPlaceholderText("Wade Wilson")
+        self.input_professor.setPlaceholderText("Wade Winston Wilson")
         self.label_classroom = QLabel("Aula: ")
         self.input_classroom = QLineEdit()
-        self.input_classroom.setPlaceholderText("125") 
-        
+        self.input_classroom.setPlaceholderText("A-101") 
+    
     def layouts(self):
         """ Layouts que compone el menu principal"""
         # Layouts
-        
-        # Layout de fondo que contiene a titulo y principal
-        self.All_layout = QVBoxLayout()
-        
-        # Layout de titulo
-        self.main_title = QHBoxLayout()
-        
-        # Layout principal el que contiene a central_main_layout
-        # y bottom_main_layout   
+        # Layout principal 
         self.main_layout = QVBoxLayout()
+        
+         # Layout de titulo
+        self.title_layout = QHBoxLayout()
+        
+        # Layout contenerdor de la información sobre la asignatura
+        self.content_layout = QFormLayout()
+              
+        # Layout que contiene botones 
+        self.button_layout = QHBoxLayout()
     
-        # Layout principal del lado izquierdo que contiene a
-        self.central_main_layout = QVBoxLayout()
-        
-        # Layouts contenidos en en central_main_layout
-        self.central_center_layout = QFormLayout()
-        self.central_bottom_layout = QHBoxLayout()
-        
-        # Layout pricipal del lado derecho
-        self.bottom_main_layout = QVBoxLayout()
-        self.bottom_central_layout = QHBoxLayout()
-        
+        # Layout que contiene la lista de asignaturas
+        self.list_layout = QVBoxLayout()
+
         # Agregar los layouts hijos al layout padre
         # Layout fondo
-        self.All_layout.addLayout(self.main_title, 10)
-        self.All_layout.addLayout(self.main_layout, 90)
+        self.main_layout.addLayout(self.title_layout, 15)
+        self.main_layout.addLayout(self.content_layout, 35)
+        self.main_layout.addLayout(self.button_layout, 5)
+        self.main_layout.addLayout(self.list_layout, 40)
         
-         # Layout titulo
-        self.main_title.addWidget(self.image)
-        # alignment=Qt.AlignHCenter
-        # Layout principal
-        self.main_layout.addLayout(self.central_main_layout, 40)
-        self.main_layout.addLayout(self.bottom_main_layout, 60)
-              
-        # Layout central
-        self.central_main_layout.addLayout(self.central_center_layout, 90)
-        self.central_main_layout.addLayout(self.central_bottom_layout, 10)
-                       
-        # funciones de escribir datos layout central
-        self.central_center_layout.addRow(self.label_name_subject , self.input_name_subject)
-        self.central_center_layout.addRow(self.label_time_in , self.input_time_in )
-        self.central_center_layout.addRow(self.label_time_out , self.input_time_out )
-        self.central_center_layout.addRow(self.label_day , self.input_day )
-        self.central_center_layout.addRow(self.label_professor , self.input_professor )
-        self.central_center_layout.addRow(self.label_classroom , self.input_classroom )
+        # Agregar widgets a los layouts
         
-        # Botones layout central inferior
-        self.central_bottom_layout.addWidget(self.btn_new)
-        self.central_bottom_layout.addWidget(self.btn_update)
-        self.central_bottom_layout.addWidget(self.btn_delete)
+        # Titulo 
+        self.title_layout.addWidget(self.title)
+        self.title_layout.addWidget(self.btn_retorno)
         
-         # Layout inferior
-        self.bottom_main_layout.addLayout(self.bottom_central_layout)
+        # funciones de escribir datos lado izquierdo central
+        self.content_layout.addRow(self.label_name_subject , self.input_name_subject)
+        self.content_layout.addRow(self.label_check_in , self.input_check_in )
+        self.content_layout.addRow(self.label_check_out , self.input_check_out )
+        self.content_layout.addRow(self.label_day , self.cbdays )
+        self.content_layout.addRow(self.label_professor , self.input_professor )
+        self.content_layout.addRow(self.label_classroom , self.input_classroom )
         
-         # Agregar widgets a los layouts
-        # Lista de asignaturas lado inferior
-        self.bottom_central_layout.addWidget(self.asignature_list)
+        # Botones
+        self.button_layout.addWidget(self.btn_new)
+        self.button_layout.addWidget(self.btn_update)
+        self.button_layout.addWidget(self.btn_delete)
+        self.button_layout.addWidget(self.btn_information)
+        
+        # Lista de asignaturas 
+        self.list_layout.addWidget(self.subject_list)
+        
         
         #Colocar el layout principal en la ventana principal
-        self.setLayout(self.All_layout)
+        self.setLayout(self.main_layout)
+
+    def add_subject(self):
+        """ Inicia el formulario de ingreso de datos del empleado """
+        if (self.input_name_subject.text() or self.input_day.text() or
+            self.input_professor.text() or self.input_classroom.text() != "" ):
+            subject = (self.input_name_subject.text(), self.input_check_in.text(),
+                       self.input_check_out.text(), str(self.cbdays.currentText()),
+                       self.input_professor.text(), self.input_classroom.text())
+            try:
+                self.subject_db.add_subject(subject)
+                if (self.input_check_out.time() > self.input_check_in.time()):
+                    QMessageBox.information(
+                        self, "Información", "Asignatura agregada correctamente")
+                    self.close()
+                    self.main = Main()       
+                else:
+                     QMessageBox.information(
+                        self, "Información", "Hora de salida mayor o igual a la de entrada")                                
+            except Error as e:
+                QMessageBox.information(
+                    self, "Error", "Error al momento de agregar la asignatura")
+        else:
+            QMessageBox.information(
+                self, "Advertencia", "Debes ingresar toda la información")
+
+    def set_subject_list(self):
+        """ Obtiene las tuplas de asignaturas y las muestra en la lista """                
+        subjects = self.subject_db.get_all_subjects()
+
+        if subjects:
+            for subject in subjects:
+                self.subject_list.addItem(
+                    "{0} --- Asignatura: {1} --- Aula: {2} --- Hora entrada: {3}".format(subject[0], subject[1], subject[6], subject[2]))
+    
+    def delete_subject(self):
+        """ Elimina la asignatura que se encuentra seleccionada """
+        # Obtener el valor de la asignatura seleccionada
+        # Verificar que un elemento de la lista se encuentre seleccionado
+        if self.subject_list.selectedItems():
+            subject = self.subject_list.currentItem().text()
+            id = subject.split(" --- ")[0]
+
+            subject = self.subject_db.get_subjects_by_id(id)
+
+            yes = QMessageBox.Yes
+
+            if subject:
+                question_text = ("¿Está seguro de eliminar la asignatura {0}?".format(subject[1]))
+                question = QMessageBox.question(self, "Advertencia", question_text,
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if question == QMessageBox.Yes:
+                    self.subject_db.delete_subject_by_id(subject[0])
+                    QMessageBox.information(self, "Información", "asignatura eliminada satisfactoriamente!")
+                    self.subject_list.clear()
+                    self.set_subject_list()
+
+            else:
+                QMessageBox.information(self, "Advertencia", "Ha ocurrido un error. Reintente nuevamente")
+
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar la asignatura que desea a eliminar")
+
+    def show_information_messagebox(self):
+        """ Muestra todos los datos de un registro
+            en un messagebox
+        """
+        if self.subject_list.selectedItems():
+            subject = self.subject_list.currentItem().text()
+            id = subject.split(" --- ")[0]
+
+            subject = self.subject_db.get_subjects_by_id(id)
+
+            if subject:
+                question_text = ("""
+                                <b>
+                                   <br>
+                                   <font size="5">
+                                        <FONT COLOR='#000000'>{0}</FONT> 
+                                  </br>
+                                  <br>
+                                    <font size="4">
+                                        <FONT COLOR='#c7a500'>{1}</FONT>  
+                                <font size="3">
+                                    <br>
+                                        {2}
+                                    </br>
+                                    <br>
+                                        {3}
+                                    </br>
+                                    <br>
+                                        {4}
+                                    </br> 
+                                    <br>
+                                        {5}
+                                    </br>
+                                    <br>
+                                        {6}
+                                    </br> 
+                                </font>
+                                """.format(subject[0], subject[1],subject[2],subject[3],subject[4],subject[5],subject[6]))
+                question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar la asignatura que desea a mostrar")
+    
+    def update_subject(self):
+        if self.state == 0:
+            if self.subject_list.selectedItems():
+                subject = self.subject_list.currentItem().text()
+                id = subject.split(" --- ")[0]
+                    
+                subject = self.subject_db.get_subjects_by_id(id)
+
+                if subject:
+                    self.input_name_subject.setText("{0}".format(subject[1]))
+                    #self.input_check_in.displayFormat(subject[2])
+                    #self.input_day.setText("{0}".format(subject[4]))
+                    self.input_professor.setText("{0}".format(subject[5]))
+                    self.input_classroom.setText("{0}".format(subject[6]))
+                    self.btn_update.setText("Guardar")
+                    self.btn_new.setVisible(False)
+                    self.btn_information.setVisible(False)
+                    self.btn_delete.setVisible(False)
+                    
+                    self.state = 1
+            else:
+                QMessageBox.information(self, "Advertencia", "Favor seleccionar la asignatura que desea a actualizar")
+
+        else:  
+            #Obtengo el id de la selccion
+            if self.subject_list.selectedItems() and self.input_name_subject.text() != "":
+                subject = self.subject_list.currentItem().text()
+                id = subject.split(" --- ")[0]
+                subject = self.subject_db.get_subjects_by_id(id)
+                
+                try:
+                    self.subject_db.update_subject_by_id((
+                                                self.input_name_subject.text(), 
+                                                self.input_check_in.text(),
+                                                self.input_check_out.text(), 
+                                                str(self.cbdays.currentText()), 
+                                                self.input_professor.text(),
+                                                self.input_classroom.text(),
+                                                id
+                                                ))
+                    QMessageBox.information(self, "Información", "Datos de asignatura actualizadoss")
+                    self.subject_list.clear()
+                    self.set_subject_list()
+                    self.vaciar_inputs()
+
+                except Error as e:
+                    QMessageBox.information(
+                        self, "Error", "Error al momento de actualizar la asignatura")
+            else:
+                QMessageBox.information(
+                    self, "Advertencia", "Debes ingresar toda la informacion")
+            self.btn_update.setText("Modificar")
+            self.btn_new.setVisible(True)
+            self.btn_information.setVisible(True)
+            self.btn_delete.setVisible(True)
+            self.state = 0           
+            
+    def vaciar_inputs(self):
+        """
+        Deja vacio los inputs sin los valores que le cargue.
+        """
+        self.input_name_subject.setText("") 
+        #self.input_day.setText("")
+        self.input_professor.setText("")         
+        self.input_classroom.setText("")             
+        
+            
+class SubjectDB:
+    " Base de datos para las asignaturas "
+
+    def __init__(self, db_filename):
+        """ Inicializador de la clase """
+        self.connection = self.create_connection(db_filename)
+        self.subject_query = """   
+                                    CREATE TABLE IF NOT EXISTS subject
+	                                (
+	                                idSubject INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	                                nameSubject TEXT NOT NULL,
+	                                checkIn TIMESTAMP,
+	                                checkOut TIMESTAMP,
+	                                day TEXT,
+	                                professor TEXT,
+	                                classroom TEXT,
+	                                CONSTRAINT UQ_nameSubject UNIQUE (nameSubject)
+                                    CONSTRAINT CK_CheckOut_greater_than_checkIn CHECK (checkOut > checkIn)
+	                                )
+                              """
+        self.create_table(self.connection, self.subject_query)
+        
+    def create_connection(self, db_filename):
+        """ Crear una conexión a la base de datos SQLite """
+        conn = None
+
+        # Tratar de conectarse con SQLite y crear la base de datos
+        try:
+            conn = sqlite3.connect(db_filename)
+            print("Conexión realizada. Versión {}".format(sqlite3.version))
+        except Error as e:
+            print(e)
+        finally:
+            return conn
+    
+    def create_table(self, conn, query):
+        """
+        Crea una tabla basado en los valores de query.
+        :param conn: Conexión con la base de datos.
+        :param query: La instrucción CREATE TABLE.
+        :return:
+        """
+        try:
+            cursor = conn.cursor()
+            cursor.execute(query)
+        except Error as e:
+            print(e)
+
+    def add_subject(self, subject):
+        """
+        Realiza una inserción a la tabla de asignaturas.
+        :param subject: Una estructura que contiene
+                         los datos del empleado.
+        :return:
+        """
+        sqlInsert = """
+                    INSERT INTO subject(
+                        nameSubject, checkIn, checkOut,
+	                    day, professor, classroom)
+                     VALUES(?, ?, ?, ?, ?, ?)
+                    """
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlInsert, subject)
+            # Indicarle al motor de base de datos
+            # que los cambios sean persistentes
+            self.connection.commit()
+        except Error as e:
+            print(e)
+            
+    def get_all_subjects(self):
+        """ Obtiene todas las tuplas de la tabla subject """
+        sqlQuery = " SELECT * FROM subject ORDER BY ROWID ASC "
+
+        try:
+            cursor = self.connection.cursor()
+            subjects = cursor.execute(sqlQuery).fetchall()
+            self.connection.commit()
+            return subjects
+        except Error as e:
+            print(e)
+
+        return None
+    
+    def get_subjects_by_id(self, id):
+        """
+        Busca una asignatura mediante el valor del id.
+        param: id: El valor de la asignatura.
+        :return: Un arreglo con los atributos de la asignatura.
+        """
+        sqlQuery = " SELECT * FROM subject WHERE idSubject = ?"
+
+        try:
+            cursor = self.connection.cursor()
+            # fetchone espera que se retorne una tupla (1,)
+            subject = cursor.execute(sqlQuery, (id,)).fetchone()
+            
+            return subject
+        except Error as e:
+            print(e)
+
+        return None
+
+    def delete_subject_by_id(self, id):
+        """
+        Elimina una asignatura mediante el valor del id.
+        param: id: El valor de la asignatura.
+        :return: True si la asginatura se eliminó. None en caso contrario.
+        """
+        sqlQuery = "DELETE FROM subject WHERE idSubject = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlQuery, (id,))
+            self.connection.commit()
+
+            return True
+        except Error as e:
+            print(e)
+
+        return None
+    
+    def update_subject_by_id(self, id):
+        """
+        Actualiza una asignatura mediante el valor del id.
+        param: id: El valor de la asignatura.
+        :return: True si la asginatura se actualizó. None en caso contrario.
+        """
+        sqlUpdate= """
+                        UPDATE subject
+                        SET nameSubject = ?, 
+                          checkIn = ?, 
+                          checkOut = ?,
+	                      day = ?, 
+                          professor = ?, 
+                          classroom = ?
+                        WHERE idSubject = ?;
+                   """
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlUpdate, id)
+            self.connection.commit()
+        except Error as e:
+            print(e)
+
+        return None
+        
+
 
 # - - - - - - - -  W I D G E T  T A R E A - - - - - - - - - - -
 class Interfaz_Tarea(QWidget):
@@ -873,24 +1214,31 @@ class TareaBd:
 # - - - - - - - -  W I D G E T  E X A M E N - - - - - - - - - - -
 class Interfaz_Examen(QWidget):
     """
-    Ventana principal de la aplicacion.
+    Ventana principal de examen.
     """
     def __init__(self):
         super().__init__()
+        self.examen_db = examenBd("lemilion.bd")
         self.setWindowTitle("Examen")
         self.setGeometry(450, 450, 457,609)
         self.UI()
         self.show()
 
-    def UI(self):
-        self.main_design()
-        self.layouts()
 
-    def main_design(self):
+    def UI(self):
+        self.estado = 0
+        self.Exam_interfaz_design()
+        self.layouts_exam()
+        self.set_exam_list()
+
+    #Interfaz de ventana botones margenes e imagenes
+    def Exam_interfaz_design(self):
         """
-        Funcion que contine los widgets de la ventana
+        Funcion que contine los widgets de la ventana botones imagenes
         """
-        self.tittle = QLabel("E X A M E N ")
+        #Titulo de la ventana examen
+        self.tittle = QLabel("E X A M E N ", alignment=Qt.AlignCenter)
+        self.label_ver_examen = QLabel("  ")
         self.tittle.setFixedHeight(70)
         self.tittle.setFixedWidth(457)
         self.tittle.setStyleSheet("""color: white;
@@ -898,100 +1246,521 @@ class Interfaz_Examen(QWidget):
                                     background-image: url(Resource/Banner.jpg);
                                     """)
         
-        self.tittle.adjustSize()
+        #Lista de la ventana de examn
+        self.exam_list = QListWidget()
+        self.exam_list.itemActivated.connect(self.set_exam_list)
+        self.exam_list.setStyleSheet("""
+                                        background-image: url(Resource/List.jpg);
+                                        font-size: 20px;
+                                        """)
 
-        self.exam_list = QListWidget()   
+        #boton de retorno 
+        self.btn_retorno = QPushButton("←")
+        self.btn_retorno.setFixedHeight(70)
+        self.btn_retorno.setFixedWidth(40)   
+        self.btn_retorno.setStyleSheet("""
+                                        color:white;
+                                         border-style: none;
+                                         background-image: url(Resource/BoronRetornoInterfaz.jpg)
+                                         """)   
+         
+        #botones de la interfaz
         self.btn_new = QPushButton("Agregar")
+        self.btn_new.clicked.connect(self.insert_exam)
         self.btn_update = QPushButton("Modificar")
+        self.btn_update.clicked.connect(self.modificar_examen)
         self.btn_delete = QPushButton("Eliminar")
+        self.btn_delete.clicked.connect(self.eliminar_examen)
+        self.btn_Mostrar = QPushButton("Informacion")
+        self.btn_Mostrar.clicked.connect(self.mostrar_informacion_messagebox)
         
-        # Center Layout Widgets
+        #label de la interfax  y txt
         self.label_Asignature = QLabel("Asignatura: ")
         self.input_Asignature = QLineEdit()
         self.input_Asignature.setPlaceholderText("Añadir una asignatura")
-
         self.label_Exam = QLabel("Examen: ")
         self.input_Exam  = QLineEdit()
-        self.input_Exam.setPlaceholderText("Añadir un examen")
-
+        self.input_Exam.setPlaceholderText("Tema de examen examen")
         self.label_Present = QLabel("Presentacion: ")
         self.input_Present = QLineEdit()
-        self.input_Present.setPlaceholderText("Fecha de presentacion")
-
+        self.input_Present.setPlaceholderText("dia/mes/año")
         self.label_category = QLabel("Categoria: ")
         self.input_category = QLineEdit()
-        self.input_category.setPlaceholderText("Añadir una categoria")
-
+        self.input_category.setPlaceholderText("1: Escrito, 2: Virtual, 3: Practico")
         self.label_detail = QLabel("Detalle : ")
         self.input_detail = QLineEdit()
         self.input_detail.setPlaceholderText("Agregar un detalle")
         
-    def layouts(self):
-        """ Layouts que compone el menu principal"""
-        self.main_layout = QVBoxLayout()
+    #Distribucion del formulario botones  contenedores label
+    def layouts_exam(self):
+        """ Layouts que compone la ventana de examen"""
+        self.Exam_interfaz_layout = QVBoxLayout()
         self.top_layout = QVBoxLayout()
-        self.bottom_layout = QFormLayout()
-        self.botones_layout = QHBoxLayout()
+        self.boton_exam_layout = QFormLayout()
+        self.botones_exam_layout = QHBoxLayout()
         self.down_layout = QVBoxLayout()
     
       # Agregar los widgets al top layout
         self.top_layout.addWidget(self.tittle)
+        self.top_layout.addWidget(self.btn_retorno)
+        self.down_layout.addWidget(self.label_ver_examen)
         self.down_layout.addWidget(self.exam_list)
 
-        # Agregar los widgets (childrens) al main_layout
-        self.main_layout.addLayout(self.top_layout,30)
-        self.main_layout.addLayout(self.bottom_layout)
-        self.main_layout.addLayout(self.botones_layout,10)
-        self.main_layout.addLayout(self.down_layout)
+        # Agregar los widgets (childrens) al Exam_interfaz_layout
+        self.Exam_interfaz_layout.addLayout(self.top_layout,30)
+        self.Exam_interfaz_layout.addLayout(self.boton_exam_layout)
+        self.Exam_interfaz_layout.addLayout(self.botones_exam_layout,10)
+        self.Exam_interfaz_layout.addLayout(self.down_layout)
         
-        #bottom
-        self.bottom_layout.addRow(self.label_Asignature, self.input_Asignature)
-        self.bottom_layout.addRow(self.label_Exam, self.input_Exam)
-        self.bottom_layout.addRow(self.label_Present, self.input_Present)
-        self.bottom_layout.addRow(self.label_category, self.input_category)
-        self.bottom_layout.addRow(self.label_detail, self.input_detail)
+        #boton_exam
+        self.boton_exam_layout.addRow(self.label_Asignature, self.input_Asignature)
+        self.boton_exam_layout.addRow(self.label_Exam, self.input_Exam)
+        self.boton_exam_layout.addRow(self.label_Present, self.input_Present)
+        self.boton_exam_layout.addRow(self.label_category, self.input_category)
+        self.boton_exam_layout.addRow(self.label_detail, self.input_detail)
 
-        self.botones_layout.addWidget(self.btn_new)
-        self.botones_layout.addWidget(self.btn_update)
-        self.botones_layout.addWidget(self.btn_delete)
-        
-        self.setLayout(self.main_layout)
+        self.botones_exam_layout.addWidget(self.btn_new)
+        self.botones_exam_layout.addWidget(self.btn_update)
+        self.botones_exam_layout.addWidget(self.btn_delete)
+        self.botones_exam_layout.addWidget(self.btn_Mostrar)
+
+        self.setLayout(self.Exam_interfaz_layout)
+
+    #Funcion de insetar examen
+    def insert_exam(self):
+            """ Inserta los valores del fomulario a la tabla de examen"""
+            if(self.input_Asignature.text() or self.input_Exam.text() or self.input_Present.text()
+                or self.input_category.text() or self.input_detail.text() != ""):
+                examen = (   self.input_Asignature.text(), self.input_Exam.text(),
+                            self.input_Present.text(), self.input_category.text(), 
+                            self.input_detail.text()
+                            )
+                try:
+                    self.examen_db.add_examen(examen)
+                    QMessageBox.information(
+                    self, "Información", "Examen agregado correctamente")
+                    #self.close()
+                    #self.main = Exam_interfaz()
+                    self.exam_list.clear()
+                    self.set_exam_list()
+                    self.vaciar_inputs()
+
+                except Error as e:
+                    QMessageBox.information(
+                        self, "Error", "Error al momento de agregar la examen")
+            else:
+                QMessageBox.information(
+                    self, "Advertencia", "Debes ingresar toda la informacion")
+
+
+     #Funcion  para obtener los examenes de la lista   
+    def set_exam_list(self):
+        """ 
+        Obtiene todos los registros en la tabla examen
+        """
+
+        examenes = self.examen_db.obtener_todos_los_examenes()
+
+        if examenes:
+            for examen in examenes:
+                self.exam_list.addItem(
+                    """{0} --- {1} Fecha:{2} """.format(examen[0], examen[1], examen[3]))
+   
+   #Funcion para modificar el examen 
+    def modificar_examen(self):
+        """Obtiene el id seleccionado del examen y mediante este modifica el campo o campos con el id seleccionado
+        """
+        if self.estado == 0:
+            if self.exam_list.selectedItems():
+                examen = self.exam_list.currentItem().text()
+                id = examen.split(" --- ")[0]
+
+                examen = self.examen_db.obtener_examen_por_id(id)
+
+                if examen:
+                    self.input_Asignature.setText("{0}".format(examen[1]))
+                    self.input_Exam.setText("{0}".format(examen[2]))
+                    self.input_Present.setText("{0}".format(examen[3])) 
+                    self.input_category.setText("{0}".format(examen[4])) 
+                    self.input_detail.setText("{0}".format(examen[5]))
+                    self.btn_update.setText("Guardar")
+                    self.btn_new.setVisible(False)
+                    self.btn_Mostrar.setVisible(False)
+                    self.btn_delete.setVisible(False)
+                    self.estado = 1
+            else:
+                QMessageBox.information(self, "Advertencia", "Favor seleccionar el examen que desea a actualizar")
+        else:  
+            #Obtengo el id de la selccion
+            if self.exam_list.selectedItems() and self.input_Exam.text() != "":
+
+                #campo = (self.input_Exam.text())
+
+                examen = self.exam_list.currentItem().text()
+                id = examen.split(" --- ")[0]
+                examen = self.examen_db.obtener_examen_por_id(id)
+
+               # id_para_consulta = int(examen[0])
+
+                #datos = (id_para_consulta,campo)
+                try:
+                    self.examen_db.update_examen((self.input_Asignature.text(), 
+                                                self.input_Exam.text(),
+                                                self.input_Present.text(), 
+                                                self.input_category.text(), 
+                                                self.input_detail.text(),
+                                                id))
+                    QMessageBox.information(self, "Información", "Examen actulizada correctamente")
+                    self.exam_list.clear()
+                    self.set_exam_list()
+                    self.vaciar_inputs()
+
+                except Error as e:
+                    QMessageBox.information(
+                        self, "Error", "Error al momento de actualizar la examen")
+            else:
+                QMessageBox.information(
+                    self, "Advertencia", "Debes ingresar toda la informacion")
+            self.btn_update.setText("Modificar")
+            self.btn_new.setVisible(True)
+            self.btn_Mostrar.setVisible(True)
+            self.btn_delete.setVisible(True)
+            self.estado = 0
+
+    #Funcion para limpiar los text
+    def vaciar_inputs(self):
+        """
+        Me deja vacio los inputs sin los valores que le cargue.
+        """
+        self.input_Asignature.setText("") 
+        self.input_Exam.setText("")
+        self.input_Present.setText("")         
+        self.input_category.setText("")             
+        self.input_detail.setText("")
+
+    #Funcion pata  eliminar examen
+    def eliminar_examen(self):
+        """ ELimina el examen seleccionado mediante el id """
+        if self.exam_list.selectedItems():
+            examen = self.exam_list.currentItem().text()
+            id = examen.split(" --- ")[0]
+
+            examen = self.examen_db.obtener_examen_por_id(id)
+
+            yes = QMessageBox.Yes
+
+            if examen:
+                question_text = ("¿Está seguro de eliminar el examen {0}?".format(examen[1]))
+                question = QMessageBox.question(self, "Advertencia", question_text,
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if question == QMessageBox.Yes:
+                    self.examen_db.eliminar_examen_por_id(examen[0])
+                    QMessageBox.information(self, "Información", "¡Examen eliminado satisfactoriamente!")
+                    self.exam_list.clear()
+                    self.set_exam_list()
+
+            else:
+                QMessageBox.information(self, "Advertencia", "Ha ocurrido un error. Reintente nuevamente")
+
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar un examen a eliminar")
+
+    #Funcion para mostrar la informacion del examen un messagebox
+    def mostrar_informacion_messagebox(self):
+        """ Muestra todos los datos de un registro
+            en un messagebox
+        """
+        if self.exam_list.selectedItems():
+            examen = self.exam_list.currentItem().text()
+            id = examen.split(" --- ")[0]
+
+            examen = self.examen_db.encontrar_examen_por_id(id)
+
+            if examen:
+                question_text = ("""
+                                <b>
+                                    <br>
+                                    <font size="5">
+                                        <FONT COLOR='#000000'>{0}</FONT>
+                                    </b>
+                                </br>
+
+                                <br>
+                                    <font size="4">
+                                        <FONT COLOR='#c7a500'>{1}</FONT>
+                                    </br>
+                                    
+                                <font size="3">
+                                    <br>
+                                        {2}
+                                    </br>
+                                    <br>
+                                        {3}
+                                    </br>
+                                    <br>
+                                        {4}
+                                    </br> 
+                                </font>
+                                """.format(examen[1],examen[2],examen[3],examen[4],examen[5]))
+                question = QMessageBox.about(self,"examen","{0}".format(question_text))
+
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar el examen que desea a mostrar")
+    
+
+#Clase examen 
+class examenBd:
+    """ Base de datos para examen"""
+    def __init__(self,db_filename):
+        """Iniciliziador de la clase"""
+        self.connection = self.create_connection(db_filename)
+        self.categoria_exam_query =  """
+                                CREATE TABLE IF NOT EXISTS CategoriaExamen(
+                                    IdCategoria INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                    NombreCategoria NVARCHAR(8)
+                                );
+                                """
+        self.examen_query = """
+                                CREATE TABLE IF NOT EXISTS Examen(
+                                    IdExamen INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                    idSubject INTEGER,
+                                    Examen TEXT NOT NULL,
+                                    Fecha TEXT NOT NULL,
+                                    IdCategoria INTEGER,
+                                    Detalles TEXT,
+                                    FOREIGN KEY (IdCategoria) REFERENCES Categoriaexamen (IdCategoria)
+                                    FOREIGN KEY (idSubject) REFERENCES subject (idSubject)
+                                );
+                            """
+        self.create_table(self.connection,self.categoria_exam_query)
+        self.insert_categoria_examen()
+        self.create_table(self.connection ,self.examen_query)
+    
+    #Funcion para la base de datos
+    def create_connection(self, db_filename):
+        """ Crear una conexión a la base de datos SQLite """
+        conn = None
+
+        # Tratar de conectarse con SQLite y crear la base de datos
+        try:
+            conn = sqlite3.connect(db_filename)
+            print("Conexión realizada. Versión {}".format(sqlite3.version))
+        except Error as e:
+            print(e)
+        finally:
+            return conn
+
+    #Funcion que crea tablas
+    def create_table(self, conn, query):
+        """
+        Crea una tabla basado en los valores de query.
+        :param conn: Conexión con la base de datos.
+        :param query: La instrucción CREATE TABLE.
+        :return:
+        """
+        try:
+            cursor = conn.cursor()
+            cursor.execute(query)
+        except Error as e:
+            print(e)
+
+    #Funcion para insertar en categoria
+    def insert_categoria_examen(self):
+        """ """
+        sqlInsert = """
+                    INSERT INTO Categoriaexamen (NombreCategoria)
+                                            VALUES	('Escrito'),
+                                                ('Practico'),
+                                                ('Virtual');
+                    """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlInsert)
+            self.connection.commit()
+        except Error as e:
+            print(e)
+
+    #Funcion para agregar un examen
+    def add_examen(self, examen):
+        """
+        Realiza una inserción a la tabla de examen.
+        :para examen: Una estructura que contiene
+                         los datos del examen.
+        :return:
+        """
+        sqlInsert = """                 
+                    INSERT INTO Examen(
+                        IdAsignatura, Examen, Fecha,
+                        IdCategoria, Detalles)
+                     VALUES(?, ?, ?, ?, ?)
+                    """
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlInsert, examen)
+            # Indicarle al motor de base de datos
+            # que los cambios sean persistentes
+            self.connection.commit()
+        except Error as e:
+            print(e)
+
+    #Funcion para actualizar un examen por su id
+    def update_examen(self, id):
+        """
+        Query que se encarga de la actualizacion de datos
+        """
+        sqlUpdate = """
+                    UPDATE Examen 
+                    SET IdAsignatura = ?,
+                        Examen = ? ,
+                        Fecha = ?,
+                        IdCategoria = ?,
+                        Detalles = ?                  
+                    WHERE IdExamen = ?;
+                    """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlUpdate,id)
+            self.connection.commit()
+        except Error as e:
+            print(e) 
+
+      
+    def encontrar_examen_por_id(self,id):
+        """ Busca una examen mediante el valor del id"""
+        sqlQuery = """
+                        SELECT A.IdExamen, IdAsignatura, A.Examen, A.Fecha,B.NombreCategoria, A.Detalles
+                        FROM Examen A INNER JOIN CategoriaExamen B 
+                        ON A.IdCategoria = B.IdCategoria WHERE A.IdExamen = ?;
+                  """
+
+        try:
+            cursor = self.connection.cursor()
+            examen = cursor.execute(sqlQuery, (id,)).fetchone()
+
+            return examen
+        except Error as e:
+            print(e)
+
+        return None
+    #Funcion para obtener las tuplas de examenes
+    def obtener_todos_los_examenes(self):
+        """ Obtiene todas las tuplas de la tabla Examen """
+        sqlQuery = "SELECT * FROM Examen ORDER BY ROWID ASC;"
+
+        try:
+            cursor = self.connection.cursor()
+            examenes = cursor.execute(sqlQuery).fetchall()
+            self.connection.commit()
+            return examenes
+        except Error as e:
+            print(e)
+
+        return None
+
+  
+
+    #Funcion para buscar un examen por su id unico
+    def obtener_examen_por_id(self,id):
+        """
+        Busca una asignatura mediante el valor del id.
+        param: id: El valor de la asignatura.
+        :return
+        """
+        sqlQuery = " SELECT * FROM Examen WHERE IdExamen = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            examen = cursor.execute(sqlQuery, (id,)).fetchone()
+
+            return examen
+        except Error as e:
+            print(e)
+
+        return None
+
+    #Funcion para eliminar un examen por  su id
+    def eliminar_examen_por_id(self, id):
+        """
+        Elimina un examen mediante el valor del id Examen.
+        """
+        sqlQuery = " DELETE FROM Examen WHERE IdExamen = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlQuery, (id,))
+            self.connection.commit()
+
+            return True
+        except Error as e:
+            print(e)
+
+        return None
+
+
 
 # - - - - - - - -  W I D G E T  E V E N T O - - - - - - - - - - -
 class Interfaz_Evento(QWidget):
     """
-    Ventana Principal de la Aplicacion
+    Ventana Principal del Evento
     """
     def __init__(self):
         super().__init__()
+        self.evento_db = EventoBd("lemilion.bd")
         self.setWindowTitle("Evento")
         self.setGeometry(450, 450, 457,609)
         self.UI()
         self.show()
 
     def UI(self):
+        self.estado = 0
         self.main_design()
         self.layouts()
+        self.conjunto_de_eventos()
 
     def main_design(self):
         """
-        Menu que contendra un evento y muestra sus detalles
+        Menu que contiene los widgets de dicha ventana
         """
-        self.tittle = QLabel("E V E N T O")
+        self.tittle = QLabel("E V E N T O", alignment=Qt.AlignCenter)
         self.tittle.setFixedHeight(70)
-        self.tittle.setFixedWidth(457)
+        self.tittle.setFixedWidth(417)
         self.tittle.setStyleSheet("""color: white;
                                     font-size: 30px;
                                     background-image: url(Resource/Banner.jpg);
                                     """)
-
+        self.label_ver_eventos = QLabel(" ")
         self.tittle.adjustSize()
 
+        #list
         self.evento_list = QListWidget()
-        self.btn_new = QPushButton("Agregar")
-        self.btn_update = QPushButton("Modificar")
-        self.btn_delete = QPushButton("Eliminar")
+        self.evento_list.setStyleSheet("""
+                                        background-image: url(Resource/list.jpg);
+                                        font-size: 20px;
+                                        color: White;
+                                        """)
 
+        self.btn_retorno = QPushButton("←")
+        self.btn_retorno.setStyleSheet("""
+                                        color:white;
+                                         border-style: none;
+                                         background-image: url(Resource/BoronRetornoInterfaz.jpg)
+                                         """)
+        self.btn_retorno.setFixedHeight(70)
+        self.btn_retorno.setFixedWidth(40)
+
+        self.btn_new = QPushButton("Agregar")
+        self.btn_new.clicked.connect(self.insert)
+        self.btn_new.clicked.connect(self.ultimo_conjunto_eventos)
+        self.btn_update = QPushButton("Modificar")
+        self.btn_update.clicked.connect(self.modificar_evento)
+        self.btn_delete = QPushButton("Eliminar")
+        self.btn_delete.clicked.connect(self.eliminar_evento)
+        self.btn_view = QPushButton("Informacion")
+        self.btn_view.clicked.connect(self.mostrar_informacion)
+
+        #Widgets
         self.label_name_subject = QLabel("Asignatura: ")
         self.input_name_subject = QLineEdit()
         self.input_name_subject.setPlaceholderText("Agregar una asignatura")
@@ -1002,7 +1771,7 @@ class Interfaz_Evento(QWidget):
         
         self.label_name_date = QLabel("Fecha: ")
         self.input_name_date = QLineEdit()
-        self.input_name_date.setPlaceholderText("Agregar fecha")
+        self.input_name_date.setPlaceholderText("day/mounth/year")
         
         self.label_name_location = QLabel("Ubicacion: ")
         self.input_name_location = QLineEdit()
@@ -1017,13 +1786,15 @@ class Interfaz_Evento(QWidget):
         Layouts que compone el menu principal
         """
         self.main_layout = QVBoxLayout()
-        self.top_layout = QVBoxLayout()
+        self.top_layout = QHBoxLayout()
         self.button_layout = QFormLayout()
         self.boton_layout = QHBoxLayout()
         self.down_layout = QVBoxLayout()
 
         # Agregar los widgets al top_layout
         self.top_layout.addWidget(self.tittle)
+        self.top_layout.addWidget(self.btn_retorno)
+        self.down_layout.addWidget(self.label_ver_eventos)
         self.down_layout.addWidget(self.evento_list)
 
         # Agregando los layouts hijos al layout padre
@@ -1032,6 +1803,8 @@ class Interfaz_Evento(QWidget):
         self.main_layout.addLayout(self.boton_layout, 10)
         self.main_layout.addLayout(self.down_layout)
 
+        #button
+        #self.button_layout.addRow(self.btn_retorno)
         self.button_layout.addRow(self.label_name_subject, self.input_name_subject)
         self.button_layout.addRow(self.label_name_event, self.input_name_event)
         self.button_layout.addRow(self.label_name_date, self.input_name_date)
@@ -1043,8 +1816,372 @@ class Interfaz_Evento(QWidget):
         self.boton_layout.addWidget(self.btn_new)
         self.boton_layout.addWidget(self.btn_update)
         self.boton_layout.addWidget(self.btn_delete)
+        self.boton_layout.addWidget(self.btn_view)
 
         self.setLayout(self.main_layout)
+
+
+    def conjunto_de_eventos(self):
+        """
+        Obtiene todos los registros de la tabla eventos
+        """
+        eventos = self.evento_db.obtener_todos_los_eventos()
+
+        if eventos:
+            for evento in eventos:
+                self.evento_list.addItem(
+                    """{0} --- {1} --- {2} """.format(evento[1], evento[2], evento[3]))
+
+    def ultimo_conjunto_eventos(self):
+        """
+        Ultimo registro de eventos
+        """
+
+        eventos = self.evento_db.obtener_ultimo_evento()
+
+        if eventos:
+            for evento in eventos:
+                self.evento_list.addItem(
+                    """{0} --- {1} --- {2} """.format(evento[1], evento[2], evento[3]))
+
+    def insert(self):
+        """
+        Inserta los registros del formulario a la tabla evento
+        """
+        if(self.input_name_subject.text() or self.input_name_event.text()
+            or self.input_name_date.text() or self.input_name_location.text()
+            or self.input_name_detail.text() != ""):
+
+            evento = (  self.input_name_subject.text(), self.input_name_event.text(),
+                        self.input_name_date.text(), self.input_name_location.text(),
+                        self.input_name_detail.text()
+                        )
+            try:
+                self.evento_db.add_Evento(evento)
+                QMessageBox.information(
+                    self, "Información", "Evento agregado correctamente")
+                #self.close()
+                #self.main = Main()    
+            except Error as e:
+                QMessageBox.information(
+                    self, "Error", "Error en el proceso de agregar evento")
+        else:
+            QMessageBox.information(
+                self, "Advertencia", "Debes ingresar todos los datos")
+
+
+    def modificar_evento(self):
+
+        if self.estado == 0:
+            if self.evento_list.selectedItems():
+                evento = self.evento_list.currentItem().text()
+                id = evento.split(" --- ")[1]
+
+                evento = self.evento_db.evento_por_id(id)
+
+                if evento:
+                    self.input_name_subject.setText("{0}".format(evento[1]))
+                    self.input_name_event.setText("{0}".format(evento[2]))
+                    self.input_name_date.setText("{0}".format(evento[3]))
+                    self.input_name_location.setText("{0}".format(evento[4]))
+                    self.input_name_detail.setText("{0}".format(evento[5]))
+                    self.btn_update.setText("Guardar")
+                    self.btn_new.setVisible(False)
+                    self.btn_view.setVisible(False)
+                    self.btn_delete.setVisible(False)
+                    self.estado = 1
+            else:
+                QMessageBox.information(self, "Advertencia", "Favor seleccionar el evento que desea a actualizar")
+
+        else:
+            #Obteniendo el id seleccionado
+            if self.evento_list.selectedItems() and self.input_name_event.text() != "":
+                evento = self.evento_list.currentItem().text()
+                id = evento.split(" --- ")[1]
+                evento = self.evento_db.evento_por_id(id)
+
+                id_consulta = int(evento[0])
+
+                try:
+                    self.evento_db.update_evento((self.input_name_subject.text(),
+                                                  self.input_name_event.text(),
+                                                  self.input_name_date.text(),
+                                                  self.input_name_location.text(),
+                                                  self.input_name_detail.text(),
+                                                  id_consulta))
+                    QMessageBox.information(self, "Información", "Evento actulizado correctamente")
+                    self.evento_list.clear()
+                    self.conjunto_de_eventos()
+                    self.vaciar_inputs()
+
+                except Error as e:
+                    QMessageBox.information(
+                        self, "Error", "Error al momento de actualizar el Evento")
+            else:
+                QMessageBox.information(
+                    self, "Advertencia", "Debes ingresar toda la informacion")
+            self.btn_update.setText("Modificar")
+            self.btn_new.setVisible(True)
+            self.btn_view.setVisible(True)
+            self.btn_delete.setVisible(True)
+            self.estado = 0      
+
+    def vaciar_inputs(self):
+        """
+        Deja vacio los inputs de los valores cargados anteriormente
+        """
+        self.input_name_subject.setText("") 
+        self.input_name_event.setText("")
+        self.input_name_date.setText("")         
+        self.input_name_location.setText("")             
+        self.input_name_detail.setText("")    
+
+
+    def eliminar_evento(self):
+        """ 
+        ELimina el evento seleccionado
+        """
+        if self.evento_list.selectedItems():
+            evento = self.evento_list.currentItem().text()
+            id = evento.split(" --- ")[1]
+
+            evento = self.evento_db.evento_por_id(id)
+
+            yes = QMessageBox.Yes
+
+            if evento:
+                question_text = ("¿Esta seguro de eliminar el evento {0}?".format(evento[2]))
+                question = QMessageBox.question(self, "Advertencia", question_text,
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if question == QMessageBox.Yes:
+                    self.evento_db.eliminar_evento(evento[2])
+                    QMessageBox.information(self, "Información", "Evento eliminado satisfactoriamente")
+                    self.evento_list.clear()
+                    self.conjunto_de_eventos()
+
+            else:
+                QMessageBox.information(self, "Advertencia", "Ha ocurrido un error. Reintente nuevamente")
+
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar un Evento a eliminar")  
+
+
+    def mostrar_informacion(self):
+        """
+        Muestra la informacion de un evento
+        """
+        if self.evento_list.selectedItems():
+            evento = self.evento_list.currentItem().text()
+            id = evento.split(" --- ")[1]
+
+            evento = self.evento_db.evento_por_id(id)
+
+            if evento:
+                question_text = ("""
+                                <b>
+                                    <br>
+                                    <font size="5">
+                                        <FONT COLOR='#000000'>{0}</FONT>
+                                    </b>
+                                </br>
+
+                                <br>
+                                    <font size="4">
+                                        <FONT COLOR='#c7a500'>{1}</FONT>
+                                    </br>
+                                    
+                                <font size="3">
+                                    <br>
+                                        {2}
+                                    </br>
+                                    <br>
+                                        {3}
+                                    </br>
+                                    <br>
+                                        {4}
+                                    </br> 
+                                </font>
+                                """.format(evento[1],evento[2],evento[3],evento[4],evento[5]))
+                question = QMessageBox.about(self,"evento","{0}".format(question_text))
+
+
+        else:
+            QMessageBox.information(self, "Advertencia", "Favor seleccionar el evento que desea a mostrar")
+    
+
+
+class EventoBd:
+    """
+    Base de datos para el evento
+    """
+    def __init__(self,db_filename):
+        """
+        Incializador de la clase
+        """
+        self.connection = self.create_connection(db_filename)
+
+        self.asignatura_evento  = """
+                                    CREATE TABLE IF NOT EXISTS AsignaturaEvento(
+                                        IdAsignatura INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                        NombreAsignatura NVARCHAR(10)
+                                    );
+                                  """
+       
+        self.evento_query = """
+                                CREATE TABLE IF NOT EXISTS EventoT(
+                                    IdEvento INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                    idSubject INTEGER,
+                                    Evento TEXT NOT NULL,
+                                    Fecha TEXT NOT NULL,
+                                    Ubicacion TEXT NOT NULL,
+                                    Detalle TEXT,
+                                    FOREIGN KEY (IdAsignatura) REFERENCES AsignaturaEvento (IdAsignatura)
+                                    FOREIGN KEY (idSubject) REFERENCES subject (idSubject)
+                                );
+                            """
+        self.create_table(self.connection,self.asignatura_evento)
+        #self.insert_asignatura_evento()
+        self.create_table(self.connection ,self.evento_query)
+
+    def create_connection(self, db_filename):
+        """ Crear una conexión a la base de datos SQLite """
+        conn = None
+
+        try:
+            conn = sqlite3.connect(db_filename)
+            print("Conexión realizada. Version {}".format(sqlite3.version))
+        except Error as e:
+            print(e)
+        finally:
+            return conn
+
+
+
+    def create_table(self, conn, query):
+        """
+        Crea una tabla basado en los valores de query.
+        :param conn: Conexión con la base de datos.
+        :param query: La instrucción CREATE TABLE.
+        :return:
+        """
+        try:
+            cursor = conn.cursor()
+            cursor.execute(query)
+        except Error as e:
+            print(e)
+    
+   
+
+    
+
+    def add_Evento(self, EventoT):
+        """
+        Insertar en la tabla evento
+        :param Evento: Una estructura que contiene los datos del evento
+        :return:
+        """
+        sqlInsert = """
+                    INSERT INTO EventoT(
+                        IdAsignatura, Evento, Fecha, Ubicacion,
+                        Detalle)
+                    VALUES(?, ?, ?, ?, ?)
+                    """
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlInsert, EventoT)
+            # Indicarle al motor de base de datos
+            # que los cambios sean persistentes
+            self.connection.commit()
+        except Error as e:
+            print(e)
+
+    def update_evento(self, EventoT):
+        """
+        Modificar los datos
+        """
+        sqlUpdate = """
+                    UPDATE EventoT
+                    SET IdAsignatura = ?,
+                        Evento = ?,
+                        Fecha = ?,
+                        Ubicacion = ?,
+                        Detalle = ?
+                    WHERE IdEvento = ?;
+                    """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlUpdate, EventoT)
+            self.connection.commit()
+        except Error as e:
+            print(e)
+    
+    def obtener_todos_los_eventos(self):
+        """
+        Obtiene todos los datos de eventos
+        """
+        sqlQuery = "SELECT * FROM EventoT ORDER BY ROWID ASC;"
+
+        try:
+            cursor = self.connection.cursor()
+            eventos = cursor.execute(sqlQuery).fetchall()
+            self.connection.commit()
+            return eventos
+        except Error as e:
+            print(e)
+
+        return None
+    
+    def obtener_ultimo_evento(self):
+        sqlQuery ="SELECT * FROM EventoT ORDER BY IdEvento DESC LIMIT 1;" 
+
+        try:
+            cursor = self.connection.cursor()
+            eventos = cursor.execute(sqlQuery).fetchall()
+            self.connection.commit()
+            return eventos
+        except Error as e:
+            print(e)
+
+        return None
+    
+
+    def evento_por_id(self, id_Evento):
+        """ 
+        Busca un evento mediante el valor del id
+        """
+        sqlQuery = " SELECT * FROM EventoT WHERE Evento = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            evento = cursor.execute(sqlQuery, (id_Evento,)).fetchone()
+
+            return evento
+
+        except Error as e:
+            print(e)
+
+        return None
+
+
+    def eliminar_evento(self, id_Evento):
+        """
+        Elimina un evento por el valor del id
+        """
+        sqlQuery = " DELETE FROM EventoT WHERE Evento = ?;"
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sqlQuery, (id_Evento,))
+            self.connection.commit()
+
+            return True
+        except Error as e:
+            print(e)
+
+        return None
+
 
 
 def main():
