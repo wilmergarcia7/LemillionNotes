@@ -1267,8 +1267,8 @@ class Interfaz_Examen(QWidget):
                                         color:white;
                                          border-style: none;
                                          background-image: url(Resource/BoronRetornoInterfaz.jpg)
-                                         """)   
-         
+                                         """)  
+        self.btn_retorno.clicked.connect(self.add_MenuAgenda) 
         #botones de la interfaz
         self.btn_new = QPushButton("Agregar")
         self.btn_new.clicked.connect(self.insert_exam)
@@ -1300,7 +1300,7 @@ class Interfaz_Examen(QWidget):
     def layouts_exam(self):
         """ Layouts que compone la ventana de examen"""
         self.Exam_interfaz_layout = QVBoxLayout()
-        self.top_layout = QVBoxLayout()
+        self.top_layout = QHBoxLayout()
         self.boton_exam_layout = QFormLayout()
         self.botones_exam_layout = QHBoxLayout()
         self.down_layout = QVBoxLayout()
@@ -1512,6 +1512,11 @@ class Interfaz_Examen(QWidget):
 
         else:
             QMessageBox.information(self, "Advertencia", "Favor seleccionar el examen que desea a mostrar")
+    
+    #Metodo para retornar a la ventana anterior
+    def add_MenuAgenda(self):
+        self.Menu_Agenda = AgendaMenu()
+        self.close()
     
 
 #Clase examen 
@@ -1754,7 +1759,7 @@ class Interfaz_Evento(QWidget):
                                          """)
         self.btn_retorno.setFixedHeight(70)
         self.btn_retorno.setFixedWidth(40)
-
+        self.btn_retorno.clicked.connect(self.add_MenuAgenda) 
         self.btn_new = QPushButton("Agregar")
         self.btn_new.clicked.connect(self.insert)
         self.btn_new.clicked.connect(self.ultimo_conjunto_eventos)
@@ -2014,6 +2019,10 @@ class Interfaz_Evento(QWidget):
         else:
             QMessageBox.information(self, "Advertencia", "Favor seleccionar el evento que desea a mostrar")
     
+    #Metodo para retornar a la ventana anterior
+    def add_MenuAgenda(self):
+        self.Menu_Agenda = AgendaMenu()
+        self.close()
 
 
 class EventoBd:
