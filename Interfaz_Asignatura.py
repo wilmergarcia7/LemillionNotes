@@ -210,13 +210,13 @@ class Main(QWidget):
 
             if subject:
                 question_text = ("""
-                                Número de Asignatura:{0} \n 
-                                Asignatura: {1}\n
-                                Hora de Entrada: {2}\n
-                                Hora de Salida: {3}\n
-                                Días: {4}\n
-                                Catedrático: {5}\n
-                                Aula: {6}\n
+                                No.:{0} \n 
+                                {1}\n
+                                {2}\n
+                                {3}\n
+                                {4}\n
+                                {5}\n
+                                {6}\n
                                 """.format(subject[0], subject[1],subject[2],subject[3],subject[4],subject[5],subject[6]))
                 question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
         else:
@@ -232,6 +232,7 @@ class Main(QWidget):
 
                 if subject:
                     self.input_name_subject.setText("{0}".format(subject[1]))
+                    #self.input_check_in.displayFormat(subject[2])
                     #self.input_day.setText("{0}".format(subject[4]))
                     self.input_professor.setText("{0}".format(subject[5]))
                     self.input_classroom.setText("{0}".format(subject[6]))
