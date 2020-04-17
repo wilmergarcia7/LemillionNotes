@@ -116,7 +116,7 @@ class AgendaMenu(QWidget):
     """
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Lemilion?")
+        self.setWindowTitle("Lemilion")
         self.setGeometry(450, 80, 457,609)
         
         #Colocar Imagen de fondo
@@ -432,7 +432,7 @@ class Interfaz_Tarea(QWidget):
         self.btn_Mostrar.clicked.connect(self.mostrar_informacion_messagebox)
 
         #Widgets
-        self.label_Asignatura = QLabel("Nombre Asignaura: ")
+        self.label_Asignatura = QLabel("Asignaura: ")
         self.input_Asignatura = QLineEdit()
 
         self.label_Tarea = QLabel("Tarea: ")
@@ -689,12 +689,13 @@ class TareaBd:
         self.tarea_query = """
                                 CREATE TABLE IF NOT EXISTS Tarea(
                                     IdTArea INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                                    IdAsignatura INTEGER,
+                                    idSubject INTEGER,
                                     Tarea TEXT NOT NULL,
                                     Fecha TEXT NOT NULL,
                                     IdCategoria INTEGER,
                                     Detalles TEXT,
-                                    FOREIGN KEY (IdCategoria) REFERENCES CategoriaTarea (IdCategoria)
+                                    FOREIGN KEY (IdCategoria) REFERENCES CategoriaTarea (IdCategoria),
+                                    FOREIGN KEY (idSubject) REFERENCES subject (idSubject)
                                 );
                             """
         self.create_table(self.connection,self.categoria_query)
