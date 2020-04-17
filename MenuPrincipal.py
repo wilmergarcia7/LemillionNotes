@@ -1640,9 +1640,10 @@ class examenBd:
     def encontrar_examen_por_id(self,id):
         """ Busca una examen mediante el valor del id"""
         sqlQuery = """
-                        SELECT A.IdExamen, IdAsignatura, A.Examen, A.Fecha,B.NombreCategoria, A.Detalles
-                        FROM Examen A INNER JOIN CategoriaExamen B 
-                        ON A.IdCategoria = B.IdCategoria WHERE A.IdExamen = ?;
+                        SELECT A.IdExamen, C.nameSubject, A.Examen, A.Fecha,B.NombreCategoria, A.Detalles
+                        FROM Examen as A INNER JOIN CategoriaExamen as B 
+                        ON A.IdCategoria = B.IdCategoria INNER JOIN subject as C
+                        ON A.idSubject = C.idSubject WHERE A.IdExamen = ?;
                   """
 
         try:
