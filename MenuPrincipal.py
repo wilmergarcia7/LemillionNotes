@@ -297,7 +297,8 @@ class InterfazAsignatura(QWidget):
                                          """)
         self.btn_retorno.setFixedHeight(70)
         self.btn_retorno.setFixedWidth(30)
-      
+        self.btn_retorno.clicked.connect(self.Add_MenuPrincipal)
+        
         self.subject_list = QListWidget()
         self.subject_list.itemActivated.connect(self.set_subject_list)
          
@@ -555,7 +556,13 @@ class InterfazAsignatura(QWidget):
         self.input_name_subject.setText("") 
         #self.input_day.setText("")
         self.input_professor.setText("")         
-        self.input_classroom.setText("")             
+        self.input_classroom.setText("")       
+    
+    #Metodo para retornar a la ventana anterior
+    def Add_MenuPrincipal(self):
+        self.menu = Main()
+        self.close()
+      
         
             
 class SubjectDB:
@@ -706,8 +713,6 @@ class SubjectDB:
             print(e)
 
         return None
-        
-
 
 # - - - - - - - -  W I D G E T  T A R E A - - - - - - - - - - -
 class Interfaz_Tarea(QWidget):
@@ -1591,7 +1596,7 @@ class examenBd:
         """
         sqlInsert = """                 
                     INSERT INTO Examen(
-                        IdAsignatura, Examen, Fecha,
+                        IdSubject, Examen, Fecha,
                         IdCategoria, Detalles)
                      VALUES(?, ?, ?, ?, ?)
                     """
@@ -1612,7 +1617,7 @@ class examenBd:
         """
         sqlUpdate = """
                     UPDATE Examen 
-                    SET IdAsignatura = ?,
+                    SET IdSubject = ?,
                         Examen = ? ,
                         Fecha = ?,
                         IdCategoria = ?,
