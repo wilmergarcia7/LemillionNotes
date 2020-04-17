@@ -786,10 +786,11 @@ class Interfaz_Tarea(QWidget):
 
         self.label_fecha_de_entrega = QLabel("Fecha de entrega: ")
         self.input_fecha_de_entrega = QLineEdit()
-        self.input_fecha_de_entrega.setPlaceholderText("day/mounth/year")
+        self.input_fecha_de_entrega.setPlaceholderText("dia/mes/año")
 
         self.label_categoria_tarea = QLabel("Categoria: ")
         self.input_categria_tarea = QLineEdit()
+        self.input_categria_tarea.setPlaceholderText("Escrito,Documento,Exposicion,Ensayo,Practico,Virtual")
 
         self.label_detalle = QLabel("Detalle: ")
         self.input_detalle = QLineEdit()
