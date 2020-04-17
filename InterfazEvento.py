@@ -20,7 +20,7 @@ class Interfaz_Evento(QWidget):
     """
     def __init__(self):
         super().__init__()
-        self.evento_db = EventoBd("event.bd")
+        self.evento_db = EventoBd("lemilion.bd")
         self.setWindowTitle("Evento")
         self.setGeometry(450, 450, 457,609)
         self.UI()
@@ -290,14 +290,31 @@ class Interfaz_Evento(QWidget):
 
             if evento:
                 question_text = ("""
-                                NoEvento:{0}\n
-                                Asignatura:{1}\n
-                                Evento:{2}\n
-                                Fecha:{3}\n
-                                Ubicacion:{4}\n
-                                Detalle:{5}\n
-                                """.format(evento[0],evento[1],evento[2],evento[3],evento[4],evento[5]))
-                question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+                                <b>
+                                    <br>
+                                    <font size="5">
+                                        <FONT COLOR='#000000'>{0}</FONT>
+                                    </b>
+                                </br>
+
+                                <br>
+                                    <font size="4">
+                                        <FONT COLOR='#c7a500'>{1}</FONT>
+                                    </br>
+                                    
+                                <font size="3">
+                                    <br>
+                                        {2}
+                                    </br>
+                                    <br>
+                                        {3}
+                                    </br>
+                                    <br>
+                                        {4}
+                                    </br> 
+                                </font>
+                                """.format(evento[1],evento[2],evento[3],evento[4],evento[5]))
+                question = QMessageBox.about(self,"evento","{0}".format(question_text))
 
 
 class EventoBd:

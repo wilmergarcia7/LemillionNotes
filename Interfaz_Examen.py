@@ -20,7 +20,7 @@ class Exam_interfaz(QWidget):
     """
     def __init__(self):
         super().__init__()
-        self.examen_db = examenBd("examen.bd")
+        self.examen_db = examenBd("lemilion.bd")
         self.setWindowTitle("Examen")
         self.setGeometry(450, 450, 457,609)
         self.UI()
@@ -162,7 +162,7 @@ class Exam_interfaz(QWidget):
         if examenes:
             for examen in examenes:
                 self.exam_list.addItem(
-                    """{0} --- {1} Fecha:{2} """.format(examen[2], examen[1], examen[3]))
+                    """{0} --- {1} Fecha:{2} """.format(examen[0], examen[1], examen[3]))
    
    #Funcion para modificar el examen 
     def modificar_examen(self):
@@ -277,14 +277,31 @@ class Exam_interfaz(QWidget):
 
             if examen:
                 question_text = ("""
-                                Numero De Examen:{0}\n
-                                Asignatura:{1}\n
-                                Examen:{2}\n
-                                Fecha:{3}\n
-                                Categoria:{4}\n
-                                Detalles:{5}\n
-                                """.format(examen[0],examen[1],examen[2],examen[3],examen[4],examen[5]))
-                question = QMessageBox.information(self, "Informacion", question_text, QMessageBox.Ok)
+                                <b>
+                                    <br>
+                                    <font size="5">
+                                        <FONT COLOR='#000000'>{0}</FONT>
+                                    </b>
+                                </br>
+
+                                <br>
+                                    <font size="4">
+                                        <FONT COLOR='#c7a500'>{1}</FONT>
+                                    </br>
+                                    
+                                <font size="3">
+                                    <br>
+                                        {2}
+                                    </br>
+                                    <br>
+                                        {3}
+                                    </br>
+                                    <br>
+                                        {4}
+                                    </br> 
+                                </font>
+                                """.format(examen[1],examen[2],examen[3],examen[4],examen[5]))
+                question = QMessageBox.about(self,"examen","{0}".format(question_text))
 
         else:
             QMessageBox.information(self, "Advertencia", "Favor seleccionar el examen que desea a mostrar")

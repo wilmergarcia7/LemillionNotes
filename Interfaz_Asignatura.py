@@ -24,7 +24,7 @@ class Main(QWidget):
     """
     def __init__(self):
         super().__init__()
-        self.subject_db = SubjectDB("SubjectDB.db")
+        self.subject_db = SubjectDB("lemilion.bd")
         self.setWindowTitle("Lemilion")
         self.setGeometry(450, 450, 457, 609)
         self.UI()
