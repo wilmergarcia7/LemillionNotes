@@ -2036,7 +2036,7 @@ class EventoBd:
 
         self.asignatura_evento  = """
                                     CREATE TABLE IF NOT EXISTS AsignaturaEvento(
-                                        IdAsignatura INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                        idSubject INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                                         NombreAsignatura NVARCHAR(10)
                                     );
                                   """
@@ -2049,7 +2049,7 @@ class EventoBd:
                                     Fecha TEXT NOT NULL,
                                     Ubicacion TEXT NOT NULL,
                                     Detalle TEXT,
-                                    FOREIGN KEY (IdAsignatura) REFERENCES AsignaturaEvento (IdAsignatura)
+                                    FOREIGN KEY (idSubject) REFERENCES AsignaturaEvento (idSubject)
                                     FOREIGN KEY (idSubject) REFERENCES subject (idSubject)
                                 );
                             """
@@ -2096,7 +2096,7 @@ class EventoBd:
         """
         sqlInsert = """
                     INSERT INTO EventoT(
-                        IdAsignatura, Evento, Fecha, Ubicacion,
+                        idSubject, Evento, Fecha, Ubicacion,
                         Detalle)
                     VALUES(?, ?, ?, ?, ?)
                     """
@@ -2116,7 +2116,7 @@ class EventoBd:
         """
         sqlUpdate = """
                     UPDATE EventoT
-                    SET IdAsignatura = ?,
+                    SET idSubject = ?,
                         Evento = ?,
                         Fecha = ?,
                         Ubicacion = ?,
