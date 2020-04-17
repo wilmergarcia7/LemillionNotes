@@ -82,13 +82,13 @@ class Exam_interfaz(QWidget):
         self.input_Asignature.setPlaceholderText("Añadir una asignatura")
         self.label_Exam = QLabel("Examen: ")
         self.input_Exam  = QLineEdit()
-        self.input_Exam.setPlaceholderText("Añadir un examen")
+        self.input_Exam.setPlaceholderText("Tema de examen examen")
         self.label_Present = QLabel("Presentacion: ")
         self.input_Present = QLineEdit()
         self.input_Present.setPlaceholderText("dia/mes/año")
         self.label_category = QLabel("Categoria: ")
         self.input_category = QLineEdit()
-        self.input_category.setPlaceholderText("Escrito, Virtual, Documento, Ensayo, Practico")
+        self.input_category.setPlaceholderText("1: Escrito, 2: Virtual, 3: Practico")
         self.label_detail = QLabel("Detalle : ")
         self.input_detail = QLineEdit()
         self.input_detail.setPlaceholderText("Agregar un detalle")
@@ -141,8 +141,12 @@ class Exam_interfaz(QWidget):
                     self.examen_db.add_examen(examen)
                     QMessageBox.information(
                     self, "Información", "Examen agregado correctamente")
-                    self.close()
-                    self.main = Exam_interfaz()
+                    #self.close()
+                    #self.main = Exam_interfaz()
+                    self.exam_list.clear()
+                    self.set_exam_list()
+                    self.vaciar_inputs()
+
                 except Error as e:
                     QMessageBox.information(
                         self, "Error", "Error al momento de agregar la examen")
@@ -273,7 +277,7 @@ class Exam_interfaz(QWidget):
             examen = self.exam_list.currentItem().text()
             id = examen.split(" --- ")[0]
 
-            examen = self.examen_db.obtener_examen_por_id(id)
+            examen = self.examen_db.encontrar_examen_por_id(id)
 
             if examen:
                 question_text = ("""
@@ -322,13 +326,13 @@ class examenBd:
         self.examen_query = """
                                 CREATE TABLE IF NOT EXISTS Examen(
                                     IdExamen INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                                    IdAsignatura INTEGER,
+                                    idSubject INTEGER,
                                     Examen TEXT NOT NULL,
                                     Fecha TEXT NOT NULL,
                                     IdCategoria INTEGER,
                                     Detalles TEXT,
-                                    FOREIGN KEY (IdCategoria)
-                                        REFERENCES Categoriaexamen (IdCategoria)
+                                    FOREIGN KEY (IdCategoria) REFERENCES Categoriaexamen (IdCategoria)
+                                    FOREIGN KEY (idSubject) REFERENCES subject (idSubject)
                                 );
                             """
         self.create_table(self.connection,self.categoria_exam_query)
@@ -369,9 +373,6 @@ class examenBd:
         sqlInsert = """
                     INSERT INTO Categoriaexamen (NombreCategoria)
                                             VALUES	('Escrito'),
-                                                ('Documento'),
-                                                ('Exposicion'),
-                                                ('Ensayo'),
                                                 ('Practico'),
                                                 ('Virtual');
                     """
@@ -427,6 +428,24 @@ class examenBd:
         except Error as e:
             print(e) 
 
+      
+    def encontrar_examen_por_id(self,id):
+        """ Busca una examen mediante el valor del id"""
+        sqlQuery = """
+                        SELECT A.IdExamen, IdAsignatura, A.Examen, A.Fecha,B.NombreCategoria, A.Detalles
+                        FROM Examen A INNER JOIN CategoriaExamen B 
+                        ON A.IdCategoria = B.IdCategoria WHERE A.IdExamen = ?;
+                  """
+
+        try:
+            cursor = self.connection.cursor()
+            examen = cursor.execute(sqlQuery, (id,)).fetchone()
+
+            return examen
+        except Error as e:
+            print(e)
+
+        return None
     #Funcion para obtener las tuplas de examenes
     def obtener_todos_los_examenes(self):
         """ Obtiene todas las tuplas de la tabla Examen """
@@ -441,6 +460,8 @@ class examenBd:
             print(e)
 
         return None
+
+  
 
     #Funcion para buscar un examen por su id unico
     def obtener_examen_por_id(self,id):
