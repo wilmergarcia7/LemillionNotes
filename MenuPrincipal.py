@@ -750,12 +750,6 @@ class Interfaz_Tarea(QWidget):
 
         #Lista
         self.homework_List = QListWidget()
-        self.homework_List.setStyleSheet("""
-                                        
-                                        background-image: url(Resource/list.jpg);
-                                        font-size: 20px;
-                                        color: white;
-                                        """)
         
         self.btn_retorno = QPushButton("←")
         self.btn_retorno.setStyleSheet("""
@@ -1229,7 +1223,7 @@ class Interfaz_Examen(QWidget):
         super().__init__()
         self.examen_db = examenBd("lemilion.bd")
         self.setWindowTitle("Examen")
-        self.setGeometry(450, 450, 457,609)
+        self.setGeometry(450, 80, 457,609)
         self.UI()
         self.show()
 
@@ -1289,7 +1283,7 @@ class Interfaz_Examen(QWidget):
         self.input_Asignature.setPlaceholderText("Añadir una asignatura")
         self.label_Exam = QLabel("Examen: ")
         self.input_Exam  = QLineEdit()
-        self.input_Exam.setPlaceholderText("Tema de examen examen")
+        self.input_Exam.setPlaceholderText("Tema de examen")
         self.label_Present = QLabel("Presentacion: ")
         self.input_Present = QLineEdit()
         self.input_Present.setPlaceholderText("dia/mes/año")
